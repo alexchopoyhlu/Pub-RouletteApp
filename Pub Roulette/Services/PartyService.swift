@@ -12,6 +12,8 @@ final class PartyService {
     var currentPlayer: Player?
     var isHost: Bool = false
     var error: Error?
+    var messages: [Message] = []
+    private var isMessageListenerActive = false
 
     private init() {}
 
@@ -231,8 +233,59 @@ final class PartyService {
         firebaseService.stopListening()
     }
 
+    // MARK: - Messages
+
+    func sendMessage(text: String) async throws {
+        print("PartyService: sendMessage called with text: \(text)")
+        guard let party = currentParty,
+              let player = currentPlayer,
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else {
+            print("PartyService: sendMessage guard failed - party: \(currentParty != nil), player: \(currentPlayer != nil)")
+            return
+        }
+
+        let message = Message(
+            senderId: player.id,
+            senderName: player.name,
+            teamId: player.teamId,
+            text: text.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+
+        print("PartyService: Sending message to party \(party.code)")
+        try await firebaseService.sendMessage(to: party.code, message: message)
+        print("PartyService: Message sent successfully")
+    }
+
+    func startMessageListener() {
+        print("PartyService: startMessageListener called")
+        print("PartyService: currentParty?.code = \(currentParty?.code ?? "nil")")
+        print("PartyService: isMessageListenerActive = \(isMessageListenerActive)")
+        guard let code = currentParty?.code,
+              !isMessageListenerActive else {
+            print("PartyService: Guard failed, not starting listener")
+            return
+        }
+        isMessageListenerActive = true
+        print("PartyService: Starting listener for code \(code)")
+        firebaseService.listenToMessages(partyCode: code) { [weak self] messages in
+            print("PartyService: Received \(messages.count) messages from listener")
+            DispatchQueue.main.async {
+                self?.messages = messages
+            }
+        }
+    }
+
+    func stopMessageListener() {
+        print("PartyService: stopMessageListener called")
+        firebaseService.stopMessageListener()
+        messages = []
+        isMessageListenerActive = false
+    }
+
     func leaveParty() {
         stopListening()
+        stopMessageListener()
         currentParty = nil
         currentPlayer = nil
         isHost = false

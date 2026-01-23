@@ -7,6 +7,7 @@ final class FirebaseService {
 
     private let db = Firestore.firestore()
     private var partyListener: ListenerRegistration?
+    private var messageListener: ListenerRegistration?
 
     private init() {}
 
@@ -127,6 +128,75 @@ final class FirebaseService {
 
     func deleteParty(code: String) async throws {
         try await db.collection("parties").document(code).delete()
+    }
+
+    // MARK: - Messages
+
+    func sendMessage(to partyCode: String, message: Message) async throws {
+        print("FirebaseService: Sending message \(message.id) to parties/\(partyCode)/messages")
+        let messageData = encodeMessage(message)
+        try await db.collection("parties").document(partyCode)
+            .collection("messages").document(message.id).setData(messageData)
+        print("FirebaseService: Message sent to Firestore")
+    }
+
+    func listenToMessages(partyCode: String, onChange: @escaping ([Message]) -> Void) {
+        messageListener?.remove()
+        messageListener = db.collection("parties").document(partyCode)
+            .collection("messages")
+            .order(by: "timestamp", descending: false)
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("FirebaseService: Message listener error: \(error)")
+                    onChange([])
+                    return
+                }
+                guard let documents = snapshot?.documents else {
+                    print("FirebaseService: No documents in snapshot")
+                    onChange([])
+                    return
+                }
+                print("FirebaseService: Listener received \(documents.count) documents")
+                let messages = documents.compactMap { self.decodeMessage(from: $0.data()) }
+                onChange(messages)
+            }
+    }
+
+    func stopMessageListener() {
+        messageListener?.remove()
+        messageListener = nil
+    }
+
+    private func encodeMessage(_ message: Message) -> [String: Any] {
+        var data: [String: Any] = [
+            "id": message.id,
+            "senderId": message.senderId,
+            "senderName": message.senderName,
+            "text": message.text,
+            "timestamp": Timestamp(date: message.timestamp)
+        ]
+        if let teamId = message.teamId {
+            data["teamId"] = teamId
+        }
+        return data
+    }
+
+    private func decodeMessage(from data: [String: Any]) -> Message? {
+        guard let id = data["id"] as? String,
+              let senderId = data["senderId"] as? String,
+              let senderName = data["senderName"] as? String,
+              let text = data["text"] as? String,
+              let timestampValue = data["timestamp"] as? Timestamp
+        else { return nil }
+
+        return Message(
+            id: id,
+            senderId: senderId,
+            senderName: senderName,
+            teamId: data["teamId"] as? String,
+            text: text,
+            timestamp: timestampValue.dateValue()
+        )
     }
 
     private func encodeParty(_ party: Party) throws -> [String: Any] {

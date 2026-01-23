@@ -2,12 +2,13 @@ import SwiftUI
 
 struct CrawlView: View {
     @State private var viewModel = CrawlViewModel()
+    private var partyService: PartyService { PartyService.shared }
 
     var body: some View {
         TabView {
             FeedTabView()
                 .tabItem {
-                    Label("Feed", systemImage: "list.bullet")
+                    Label("Feed", systemImage: "bubble.left.and.bubble.right")
                 }
 
             RouteTabView(viewModel: viewModel)
@@ -22,6 +23,10 @@ struct CrawlView: View {
         }
         .navigationBarBackButtonHidden(true)
         .navigationTitle("Pub Crawl")
+        .onAppear {
+            print("CrawlView: onAppear called")
+            partyService.startMessageListener()
+        }
     }
 }
 
