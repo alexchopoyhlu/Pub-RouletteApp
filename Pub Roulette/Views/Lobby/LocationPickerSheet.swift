@@ -8,13 +8,19 @@ struct LocationPickerSheet: View {
     @State private var mapPosition: MapCameraPosition
     @State private var selectedRadius: Double
     @State private var centerCoordinate: CLLocationCoordinate2D
+    @State private var isLoadingLocation: Bool
 
-    let initialLocation: CLLocationCoordinate2D
+    private let locationService = LocationService.shared
+
+    let initialLocation: CLLocationCoordinate2D?
     let initialRadius: Int
     let onConfirm: (CLLocationCoordinate2D, Int) -> Void
 
+    // Default London coordinates for comparison
+    private static let defaultLondon = CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278)
+
     init(
-        initialLocation: CLLocationCoordinate2D,
+        initialLocation: CLLocationCoordinate2D?,
         initialRadius: Int,
         onConfirm: @escaping (CLLocationCoordinate2D, Int) -> Void
     ) {
@@ -22,22 +28,46 @@ struct LocationPickerSheet: View {
         self.initialRadius = initialRadius
         self.onConfirm = onConfirm
 
+        let startLocation = initialLocation ?? Self.defaultLondon
+        let needsLocationFetch = initialLocation == nil
+
         _mapPosition = State(initialValue: .camera(MapCamera(
-            centerCoordinate: initialLocation,
+            centerCoordinate: startLocation,
             distance: Double(initialRadius) * 4
         )))
         _selectedRadius = State(initialValue: Double(initialRadius))
-        _centerCoordinate = State(initialValue: initialLocation)
+        _centerCoordinate = State(initialValue: startLocation)
+        _isLoadingLocation = State(initialValue: needsLocationFetch)
     }
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                mapSection
+            ZStack {
+                VStack(spacing: 0) {
+                    mapSection
 
-                Divider()
+                    Divider()
 
-                radiusControlSection
+                    radiusControlSection
+                }
+
+                // Loading overlay
+                if isLoadingLocation {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .tint(.white)
+                        Text("Finding your location...")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                    }
+                    .padding(24)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
             }
             .navigationTitle("Select Location")
             .navigationBarTitleDisplayMode(.inline)
@@ -53,9 +83,29 @@ struct LocationPickerSheet: View {
                         dismiss()
                     }
                     .fontWeight(.semibold)
+                    .disabled(isLoadingLocation)
+                }
+            }
+            .task {
+                if isLoadingLocation {
+                    await fetchCurrentLocation()
                 }
             }
         }
+    }
+
+    private func fetchCurrentLocation() async {
+        do {
+            let location = try await locationService.getCurrentLocation()
+            centerCoordinate = location.coordinate
+            mapPosition = .camera(MapCamera(
+                centerCoordinate: location.coordinate,
+                distance: selectedRadius * 4
+            ))
+        } catch {
+            // If location fetch fails, just use the default
+        }
+        isLoadingLocation = false
     }
 
     private var mapSection: some View {
@@ -146,7 +196,7 @@ struct LocationPickerSheet: View {
 
 #Preview {
     LocationPickerSheet(
-        initialLocation: CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278),
+        initialLocation: nil,
         initialRadius: 1000
     ) { coordinate, radius in
         print("Selected: \(coordinate), radius: \(radius)")

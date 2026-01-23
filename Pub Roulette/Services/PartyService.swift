@@ -148,9 +148,16 @@ final class PartyService {
         var updatedTeams = party.teams
         let pubCount = party.pubs.count
 
+        // Pick a random final pub that all teams will end at
+        let finalPubIndex = Int.random(in: 0..<pubCount)
+
         for i in 0..<updatedTeams.count {
-            let pubIndices = Array(0..<pubCount)
-            updatedTeams[i].pubOrder = pubIndices.shuffled()
+            // Get all pub indices except the final one
+            var pubIndices = Array(0..<pubCount).filter { $0 != finalPubIndex }
+            pubIndices.shuffle()
+            // Add the final pub at the end so all teams end at the same place
+            pubIndices.append(finalPubIndex)
+            updatedTeams[i].pubOrder = pubIndices
 
             updatedTeams[i].drinkOrder = (0..<pubCount).map { _ in
                 Constants.drinkTypes.randomElement() ?? "Pint"

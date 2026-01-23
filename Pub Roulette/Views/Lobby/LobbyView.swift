@@ -241,15 +241,15 @@ NavigationStack(path: $navigationPath) {
         return "\(count) pub\(count == 1 ? "" : "s") added"
     }
 
-    private var initialLocationForPicker: CLLocationCoordinate2D {
+    private var initialLocationForPicker: CLLocationCoordinate2D? {
         if let lat = viewModel.searchLatitude, let lon = viewModel.searchLongitude {
             return CLLocationCoordinate2D(latitude: lat, longitude: lon)
         }
         if let location = viewModel.currentLocation {
             return location.coordinate
         }
-        // Default to London if no location available
-        return CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278)
+        // Return nil to trigger location fetch in the sheet
+        return nil
     }
 
 private func handleStatusChange(oldStatus: PartyStatus?, newStatus: PartyStatus?) {

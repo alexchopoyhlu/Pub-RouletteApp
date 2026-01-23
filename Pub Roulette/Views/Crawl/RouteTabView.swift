@@ -93,69 +93,52 @@ struct RoutePubCard: View {
 
     var body: some View {
         ZStack {
-            // Background - either pub image or locked state
-            if status == .locked {
-                // Locked state: dark grey gradient with lock
+            // Background with gradient overlay
+            ZStack {
+                // Base color - darker for locked
                 RoundedRectangle(cornerRadius: 16)
                     .fill(
                         LinearGradient(
-                            colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.9)],
+                            colors: status == .locked
+                                ? [Color.gray.opacity(0.3), Color.gray.opacity(0.5)]
+                                : [Color.orange.opacity(0.4), Color.brown.opacity(0.6)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+
+                // Gradient overlay for text visibility
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.clear, Color.black.opacity(0.7)],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
-                    .frame(height: 140)
-                    .overlay {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 32))
-                            .foregroundStyle(.white.opacity(0.7))
-                    }
-            } else {
-                // Pub image background with gradient overlay
-                ZStack {
-                    // Placeholder background pattern (can be replaced with actual image)
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.orange.opacity(0.4), Color.brown.opacity(0.6)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    // Gradient overlay for text visibility
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.clear, Color.black.opacity(0.7)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                }
-                .frame(height: 140)
             }
+            .frame(height: 140)
 
-            // Content overlay (only shown for non-locked cards)
-            if status != .locked {
-                VStack {
-                    // Top row: Name (left) and Drink (right)
-                    HStack(alignment: .top) {
-                        Text(pub.name)
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-
-                        Spacer()
-
-                        drinkBadge
-                    }
+            // Content overlay
+            VStack {
+                // Top row: Name (left) and Drink (right)
+                HStack(alignment: .top) {
+                    Text(pub.name)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
 
                     Spacer()
 
-                    // Bottom row: Maps button (left) and Status (right)
-                    HStack(alignment: .bottom) {
+                    drinkBadge
+                }
+
+                Spacer()
+
+                // Bottom row: Maps button (left) and Status (right)
+                HStack(alignment: .bottom) {
+                    if status != .locked {
                         Button(action: onMapsTapped) {
                             HStack(spacing: 4) {
                                 Image(systemName: "map.fill")
@@ -169,14 +152,15 @@ struct RoutePubCard: View {
                             .background(Color.blue)
                             .clipShape(Capsule())
                         }
-
-                        Spacer()
-
-                        statusBadge
                     }
+
+                    Spacer()
+
+                    statusBadge
                 }
-                .padding()
             }
+            .padding()
+            .opacity(status == .locked ? 0.7 : 1.0)
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
@@ -206,7 +190,8 @@ struct RoutePubCard: View {
 
     @ViewBuilder
     private var statusBadge: some View {
-        if status == .completed {
+        switch status {
+        case .completed:
             Label("Completed", systemImage: "checkmark.circle.fill")
                 .font(.subheadline)
                 .fontWeight(.medium)
@@ -215,7 +200,7 @@ struct RoutePubCard: View {
                 .padding(.vertical, 6)
                 .background(Color.green)
                 .clipShape(Capsule())
-        } else if status == .current {
+        case .current:
             Button(action: onViewTapped) {
                 HStack(spacing: 4) {
                     Image(systemName: "person.2.fill")
@@ -229,6 +214,15 @@ struct RoutePubCard: View {
                 .background(Color.yellow)
                 .clipShape(Capsule())
             }
+        case .locked:
+            Label("Locked", systemImage: "lock.fill")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.gray)
+                .clipShape(Capsule())
         }
     }
 }
