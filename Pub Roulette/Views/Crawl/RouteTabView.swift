@@ -3,6 +3,7 @@ import SwiftUI
 struct RouteTabView: View {
     @Bindable var viewModel: CrawlViewModel
     @State private var selectedPubIndex: Int?
+    private let locationService = LocationService.shared
 
     var body: some View {
         ScrollView {
@@ -20,6 +21,9 @@ struct RouteTabView: View {
                                 if pubStatus(for: index) == .current {
                                     selectedPubIndex = index
                                 }
+                            },
+                            onMapsTapped: {
+                                locationService.openInMaps(pub: item.pub)
                             }
                         )
 
@@ -85,89 +89,104 @@ struct RoutePubCard: View {
     let submissionCount: Int
     let totalPlayers: Int
     let onViewTapped: () -> Void
+    let onMapsTapped: () -> Void
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(backgroundColor)
-                .frame(height: 120)
+            // Background - either pub image or locked state
+            if status == .locked {
+                // Locked state: dark grey gradient with lock
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.gray.opacity(0.6), Color.gray.opacity(0.9)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(height: 140)
+                    .overlay {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+            } else {
+                // Pub image background with gradient overlay
+                ZStack {
+                    // Placeholder background pattern (can be replaced with actual image)
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.orange.opacity(0.4), Color.brown.opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
 
-            HStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(pub.name)
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundStyle(textColor)
+                    // Gradient overlay for text visibility
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.clear, Color.black.opacity(0.7)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                }
+                .frame(height: 140)
+            }
 
-                    if status == .completed {
-                        Label("Completed", systemImage: "checkmark.circle.fill")
-                            .font(.subheadline)
+            // Content overlay (only shown for non-locked cards)
+            if status != .locked {
+                VStack {
+                    // Top row: Name (left) and Drink (right)
+                    HStack(alignment: .top) {
+                        Text(pub.name)
+                            .font(.title3)
+                            .fontWeight(.bold)
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.green)
-                            .clipShape(Capsule())
-                    } else if status == .current {
-                        Button(action: onViewTapped) {
-                            HStack {
-                                Image(systemName: "location.fill")
-                                Text("View \(submissionCount)/\(totalPlayers)")
+                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+
+                        Spacer()
+
+                        drinkBadge
+                    }
+
+                    Spacer()
+
+                    // Bottom row: Maps button (left) and Status (right)
+                    HStack(alignment: .bottom) {
+                        Button(action: onMapsTapped) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "map.fill")
+                                Text("Maps")
                             }
                             .font(.subheadline)
                             .fontWeight(.medium)
-                            .foregroundStyle(.black)
+                            .foregroundStyle(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Color.yellow)
+                            .background(Color.blue)
                             .clipShape(Capsule())
                         }
+
+                        Spacer()
+
+                        statusBadge
                     }
                 }
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 8) {
-                    drinkBadge
-
-                    if status == .locked {
-                        Image(systemName: "lock.fill")
-                            .font(.title2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-            .padding()
-            .opacity(status == .locked ? 0.5 : 1.0)
-        }
-        .overlay {
-            if status == .locked {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.black.opacity(0.3))
+                .padding()
             }
         }
-    }
-
-    private var backgroundColor: Color {
-        switch status {
-        case .completed:
-            return Color.green.opacity(0.3)
-        case .current:
-            return Color.yellow.opacity(0.3)
-        case .locked:
-            return Color(.secondarySystemGroupedBackground)
-        }
-    }
-
-    private var textColor: Color {
-        status == .locked ? .secondary : .primary
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
     private var drinkBadge: some View {
         HStack(spacing: 4) {
+            Text(Constants.drinkEmojis[drink] ?? "🍺")
             Text(drink)
                 .font(.subheadline)
                 .fontWeight(.medium)
-            Text(Constants.drinkEmojis[drink] ?? "🍺")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
@@ -181,7 +200,35 @@ struct RoutePubCard: View {
         case "Wine": return .purple
         case "Cocktail": return .pink
         case "Shot": return .orange
-        default: return .yellow
+        default: return .yellow.opacity(0.8)
+        }
+    }
+
+    @ViewBuilder
+    private var statusBadge: some View {
+        if status == .completed {
+            Label("Completed", systemImage: "checkmark.circle.fill")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.green)
+                .clipShape(Capsule())
+        } else if status == .current {
+            Button(action: onViewTapped) {
+                HStack(spacing: 4) {
+                    Image(systemName: "person.2.fill")
+                    Text("\(submissionCount)/\(totalPlayers)")
+                }
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(.black)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.yellow)
+                .clipShape(Capsule())
+            }
         }
     }
 }

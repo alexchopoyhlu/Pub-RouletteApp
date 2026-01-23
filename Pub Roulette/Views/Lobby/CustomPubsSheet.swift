@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import CoreLocation
 
 struct CustomPubsSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -9,6 +10,7 @@ struct CustomPubsSheet: View {
     @State private var isSearching = false
 
     let customPubs: [Pub]
+    let userLocation: CLLocationCoordinate2D?
     let onAddPub: (Pub) -> Void
     let onRemovePub: (Pub) -> Void
 
@@ -156,6 +158,15 @@ struct CustomPubsSheet: View {
         request.naturalLanguageQuery = "\(searchText) pub bar"
         request.resultTypes = .pointOfInterest
 
+        // Use user's location to constrain search to nearby area
+        if let location = userLocation {
+            request.region = MKCoordinateRegion(
+                center: location,
+                latitudinalMeters: 50000, // 50km search radius
+                longitudinalMeters: 50000
+            )
+        }
+
         let search = MKLocalSearch(request: request)
         if let response = try? await search.start() {
             searchResults = response.mapItems
@@ -198,6 +209,7 @@ struct CustomPubsSheet: View {
         customPubs: [
             Pub(name: "The Red Lion", address: "123 Main St", latitude: 51.5, longitude: -0.1)
         ],
+        userLocation: CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278),
         onAddPub: { _ in },
         onRemovePub: { _ in }
     )

@@ -124,9 +124,9 @@ NavigationStack(path: $navigationPath) {
             HStack(spacing: 12) {
                 // Location selection button
                 Button {
+                    viewModel.showLocationPicker = true
                     Task {
                         await viewModel.fetchCurrentLocationIfNeeded()
-                        viewModel.showLocationPicker = true
                     }
                 } label: {
                     VStack(spacing: 8) {
@@ -217,6 +217,7 @@ NavigationStack(path: $navigationPath) {
         .sheet(isPresented: $viewModel.showCustomPubsPicker) {
             CustomPubsSheet(
                 customPubs: viewModel.customPubs,
+                userLocation: viewModel.currentLocation?.coordinate,
                 onAddPub: { viewModel.addCustomPub($0) },
                 onRemovePub: { viewModel.removeCustomPub($0) }
             )
