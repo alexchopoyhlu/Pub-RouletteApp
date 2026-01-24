@@ -3,6 +3,8 @@ import SwiftUI
 enum MeshGradientTheme {
     case sunset // orange, pink, yellow, purple
     case midnight // blue, purple, black
+    case aurora // green, teal, cyan for team assignment
+    case amber // warm amber, gold, brown for pub reveal
 
     var colors: [[Color]] {
         switch self {
@@ -19,6 +21,20 @@ enum MeshGradientTheme {
                 [Color(red: 0.1, green: 0.0, blue: 0.3), .indigo, .purple, Color(red: 0.1, green: 0.0, blue: 0.3)],
                 [Color(red: 0.0, green: 0.1, blue: 0.4), .blue, .indigo, Color(red: 0.0, green: 0.1, blue: 0.4)],
                 [.black, Color(red: 0.0, green: 0.1, blue: 0.3), Color(red: 0.0, green: 0.1, blue: 0.3), .black]
+            ]
+        case .aurora:
+            return [
+                [Color(red: 0.0, green: 0.1, blue: 0.1), Color(red: 0.0, green: 0.2, blue: 0.2), Color(red: 0.0, green: 0.2, blue: 0.2), Color(red: 0.0, green: 0.1, blue: 0.1)],
+                [Color(red: 0.0, green: 0.3, blue: 0.3), .teal, .cyan, Color(red: 0.0, green: 0.3, blue: 0.3)],
+                [Color(red: 0.0, green: 0.4, blue: 0.3), .green, .teal, Color(red: 0.0, green: 0.4, blue: 0.3)],
+                [Color(red: 0.0, green: 0.15, blue: 0.15), Color(red: 0.0, green: 0.25, blue: 0.2), Color(red: 0.0, green: 0.25, blue: 0.2), Color(red: 0.0, green: 0.15, blue: 0.15)]
+            ]
+        case .amber:
+            return [
+                [Color(red: 0.15, green: 0.08, blue: 0.0), Color(red: 0.2, green: 0.1, blue: 0.0), Color(red: 0.2, green: 0.1, blue: 0.0), Color(red: 0.15, green: 0.08, blue: 0.0)],
+                [Color(red: 0.3, green: 0.15, blue: 0.0), Color(red: 0.8, green: 0.5, blue: 0.1), Color(red: 0.9, green: 0.6, blue: 0.2), Color(red: 0.3, green: 0.15, blue: 0.0)],
+                [Color(red: 0.4, green: 0.2, blue: 0.05), Color(red: 0.7, green: 0.4, blue: 0.1), Color(red: 0.6, green: 0.35, blue: 0.1), Color(red: 0.4, green: 0.2, blue: 0.05)],
+                [Color(red: 0.1, green: 0.05, blue: 0.0), Color(red: 0.2, green: 0.1, blue: 0.02), Color(red: 0.2, green: 0.1, blue: 0.02), Color(red: 0.1, green: 0.05, blue: 0.0)]
             ]
         }
     }
@@ -76,31 +92,49 @@ struct AnimatedMeshGradientFallback: View {
         self.theme = theme
     }
 
+    private var backgroundColor: Color {
+        switch theme {
+        case .sunset: return .indigo
+        case .midnight: return .black
+        case .aurora: return Color(red: 0.0, green: 0.15, blue: 0.15)
+        case .amber: return Color(red: 0.15, green: 0.08, blue: 0.0)
+        }
+    }
+
+    private var circleColors: [Color] {
+        switch theme {
+        case .sunset: return [.purple, .pink, .orange, .yellow]
+        case .midnight: return [.indigo, .purple, .blue, Color(red: 0.2, green: 0.0, blue: 0.4)]
+        case .aurora: return [.teal, .cyan, .green, Color(red: 0.0, green: 0.5, blue: 0.4)]
+        case .amber: return [Color(red: 0.8, green: 0.5, blue: 0.1), Color(red: 0.9, green: 0.6, blue: 0.2), Color(red: 0.7, green: 0.4, blue: 0.1), Color(red: 0.6, green: 0.35, blue: 0.1)]
+        }
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                theme == .sunset ? Color.indigo : Color.black
+                backgroundColor
 
                 Circle()
-                    .fill(theme == .sunset ? .purple : .indigo)
+                    .fill(circleColors[0])
                     .frame(width: 300, height: 300)
                     .blur(radius: 60)
                     .offset(x: animate ? -50 : 100, y: animate ? -100 : 50)
 
                 Circle()
-                    .fill(theme == .sunset ? .pink : .purple)
+                    .fill(circleColors[1])
                     .frame(width: 250, height: 250)
                     .blur(radius: 50)
                     .offset(x: animate ? 100 : -80, y: animate ? 150 : -50)
 
                 Circle()
-                    .fill(theme == .sunset ? .orange : .blue)
+                    .fill(circleColors[2])
                     .frame(width: 280, height: 280)
                     .blur(radius: 70)
                     .offset(x: animate ? -80 : 60, y: animate ? 50 : 150)
 
                 Circle()
-                    .fill(theme == .sunset ? .yellow : Color(red: 0.2, green: 0.0, blue: 0.4))
+                    .fill(circleColors[3])
                     .frame(width: 200, height: 200)
                     .blur(radius: 40)
                     .offset(x: animate ? 80 : -40, y: animate ? -150 : 100)
@@ -139,4 +173,12 @@ struct MeshGradientBackground: View {
 
 #Preview("Midnight") {
     MeshGradientBackground(theme: .midnight)
+}
+
+#Preview("Aurora") {
+    MeshGradientBackground(theme: .aurora)
+}
+
+#Preview("Amber") {
+    MeshGradientBackground(theme: .amber)
 }

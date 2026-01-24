@@ -57,8 +57,8 @@ struct HomeView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(playerName.isEmpty ? .white.opacity(0.3) : .white)
-                            .foregroundStyle(playerName.isEmpty ? .white.opacity(0.6) : .orange)
+                            .background(playerName.isEmpty ? Color.green.opacity(0.3) : Color.green)
+                            .foregroundStyle(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .font(.bricolage(.body))
                         }
@@ -73,13 +73,12 @@ struct HomeView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(.ultraThinMaterial)
+                            .background(playerName.isEmpty ? Color.blue.opacity(0.3) : Color.blue)
                             .foregroundStyle(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .font(.bricolage(.body))
                         }
                         .disabled(playerName.isEmpty)
-                        .opacity(playerName.isEmpty ? 0.5 : 1)
                     }
                     .padding(.horizontal, 40)
 

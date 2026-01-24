@@ -4,10 +4,12 @@ import UIKit
 struct TeamWheelView: View {
     @Binding var navigationPath: NavigationPath
     @State private var viewModel = TeamWheelViewModel()
+    @State private var showEditTeamSheet = false
+    @State private var selectedTeamForEdit: Team?
 
     var body: some View {
         ZStack {
-            MeshGradientBackground(theme: .midnight)
+            MeshGradientBackground(theme: .aurora)
 
             VStack(spacing: 16) {
                 Text("Team Assignment")
@@ -65,11 +67,30 @@ struct TeamWheelView: View {
                 ForEach(viewModel.teams) { team in
                     TeamCardView(
                         team: team,
-                        players: viewModel.playersInTeam(team)
+                        players: viewModel.playersInTeam(team),
+                        isMyTeam: team.id == viewModel.currentPlayerTeamId,
+                        onEditTapped: {
+                            selectedTeamForEdit = team
+                            showEditTeamSheet = true
+                        }
                     )
                 }
             }
             .padding(.horizontal)
+        }
+        .sheet(isPresented: $showEditTeamSheet) {
+            if let team = selectedTeamForEdit {
+                EditTeamSheet(
+                    team: team,
+                    onUpdateTeam: { name, colorHex in
+                        Task {
+                            await viewModel.updateTeam(teamId: team.id, newName: name, newColorHex: colorHex)
+                        }
+                    }
+                )
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+            }
         }
     }
 
@@ -163,33 +184,159 @@ struct TeamWheelView: View {
 struct TeamCardView: View {
     let team: Team
     let players: [Player]
+    let isMyTeam: Bool
+    let onEditTapped: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(team.name)
-                .font(.bricolage(.caption))
-                .fontWeight(.semibold)
-                .foregroundStyle(.white)
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(team.name)
+                    .font(.bricolage(.caption))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .padding(.trailing, isMyTeam ? 20 : 0)
 
-            Rectangle()
-                .fill(Color.white.opacity(0.5))
-                .frame(height: 1)
+                Rectangle()
+                    .fill(Color.white.opacity(0.5))
+                    .frame(height: 1)
 
-            if players.isEmpty {
-                Spacer()
-            } else {
-                ForEach(players) { player in
-                    Text("- \(player.name)")
-                        .font(.bricolage(.caption2))
-                        .foregroundStyle(.white.opacity(0.9))
+                if players.isEmpty {
+                    Spacer()
+                } else {
+                    ForEach(players) { player in
+                        Text("- \(player.name)")
+                            .font(.bricolage(.caption2))
+                            .foregroundStyle(.white.opacity(0.9))
+                    }
+                    Spacer()
                 }
-                Spacer()
+            }
+            .padding(10)
+            .frame(width: 90, height: 120, alignment: .topLeading)
+            .background(team.color)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            if isMyTeam {
+                Button {
+                    onEditTapped()
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(6)
+                        .background(Color.black.opacity(0.3))
+                        .clipShape(Circle())
+                }
+                .padding(6)
             }
         }
-        .padding(10)
-        .frame(width: 90, height: 120, alignment: .topLeading)
-        .background(team.color)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct EditTeamSheet: View {
+    let team: Team
+    let onUpdateTeam: (String, String) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var editedName: String = ""
+    @State private var selectedColorIndex: Int = 0
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                // Team preview
+                Circle()
+                    .fill(Color(hex: Constants.teamColors[selectedColorIndex].hex) ?? .gray)
+                    .frame(width: 80, height: 80)
+                    .overlay(
+                        Text(teamInitials)
+                            .font(.bricolage(.title2))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                    )
+
+                VStack(alignment: .leading, spacing: 16) {
+                    // Team name
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Team Name")
+                            .font(.bricolage(.caption))
+                            .foregroundStyle(.secondary)
+
+                        TextField("Team Name", text: $editedName)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.bricolage(.body))
+                    }
+
+                    // Color picker
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Team Color")
+                            .font(.bricolage(.caption))
+                            .foregroundStyle(.secondary)
+
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 12) {
+                            ForEach(Array(Constants.teamColors.enumerated()), id: \.offset) { index, colorInfo in
+                                Button {
+                                    selectedColorIndex = index
+                                } label: {
+                                    Circle()
+                                        .fill(Color(hex: colorInfo.hex) ?? .gray)
+                                        .frame(width: 44, height: 44)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(selectedColorIndex == index ? Color.primary : Color.clear, lineWidth: 3)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal)
+
+                Spacer()
+
+                // Save button
+                Button {
+                    onUpdateTeam(
+                        editedName.trimmingCharacters(in: .whitespaces),
+                        Constants.teamColors[selectedColorIndex].hex
+                    )
+                    dismiss()
+                } label: {
+                    Text("Save Changes")
+                        .font(.bricolage(.body))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(editedName.trimmingCharacters(in: .whitespaces).isEmpty ? Color.gray : Color.green)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .disabled(editedName.trimmingCharacters(in: .whitespaces).isEmpty)
+                .padding(.horizontal)
+            }
+            .padding(.top)
+            .navigationTitle("Edit Your Team")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                editedName = team.name
+                selectedColorIndex = Constants.teamColors.firstIndex(where: { $0.hex == team.colorHex }) ?? 0
+            }
+        }
+    }
+
+    private var teamInitials: String {
+        let words = editedName.split(separator: " ")
+        if words.count >= 2 {
+            return String(words[0].prefix(1) + words[1].prefix(1)).uppercased()
+        }
+        return String(editedName.prefix(2)).uppercased()
     }
 }
 

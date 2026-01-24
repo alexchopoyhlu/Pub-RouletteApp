@@ -77,7 +77,6 @@ struct LobbyView: View {
             .onAppear {
                 if viewModel.isHost {
                     viewModel.requestLocationPermission()
-                    showHostControls = true
                 }
             }
         }
@@ -191,142 +190,141 @@ struct HostControlsSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 14) {
-                // Teams slider
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Teams")
-                            .font(.bricolage(.headline))
-                        Spacer()
-                        Text("\(viewModel.teamCount)")
-                            .font(.bricolage(.title2))
-                            .foregroundStyle(.indigo)
-                    }
-                    Slider(
-                        value: Binding(
-                            get: { Double(viewModel.teamCount) },
-                            set: { viewModel.teamCount = Int($0) }
-                        ),
-                        in: Double(Constants.minTeamCount)...Double(Constants.maxTeamCount),
-                        step: 1
-                    )
-                    .tint(.indigo)
-                    .onChange(of: viewModel.teamCount) { _, _ in
-                        Task { await viewModel.updateSettings() }
-                    }
-                }
-                .padding()
-                .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-
-                // Team Assignment Mode
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Team Assignment")
-                        .font(.bricolage(.headline))
-
-                    Picker("Assignment Mode", selection: Binding(
-                        get: { viewModel.teamAssignmentMode },
-                        set: { viewModel.updateTeamAssignmentMode($0) }
-                    )) {
-                        Text("Mixed").tag(TeamAssignmentMode.mixed)
-                        Text("Sequential").tag(TeamAssignmentMode.sequential)
-                    }
-                    .pickerStyle(.segmented)
-
-                    Text(viewModel.teamAssignmentMode == .mixed
-                        ? "Players distributed evenly across teams"
-                        : "Fill each team before moving to the next")
-                        .font(.bricolage(.caption))
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
-                .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-
-                // Location and Custom Pubs buttons
-                HStack(spacing: 12) {
-                    Button {
-                        viewModel.showLocationPicker = true
-                        Task {
-                            await viewModel.fetchCurrentLocationIfNeeded()
-                        }
-                    } label: {
-                        VStack(spacing: 8) {
-                            Image(systemName: "location.circle.fill")
-                                .font(.title2)
+            ScrollView {
+                VStack(spacing: 12) {
+                    // Teams slider
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Teams")
+                                .font(.bricolage(.headline))
+                            Spacer()
+                            Text("\(viewModel.teamCount)")
+                                .font(.bricolage(.title2))
                                 .foregroundStyle(.indigo)
-                            Text("Search Area")
-                                .font(.bricolage(.caption))
-                            Text(radiusDescription)
-                                .font(.bricolage(.caption2))
-                                .foregroundStyle(.secondary)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color(.secondarySystemGroupedBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        Slider(
+                            value: Binding(
+                                get: { Double(viewModel.teamCount) },
+                                set: { viewModel.teamCount = Int($0) }
+                            ),
+                            in: Double(Constants.minTeamCount)...Double(Constants.maxTeamCount),
+                            step: 1
+                        )
+                        .tint(.indigo)
+                        .onChange(of: viewModel.teamCount) { _, _ in
+                            Task { await viewModel.updateSettings() }
+                        }
                     }
-                    .buttonStyle(.plain)
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
 
-                    Button {
-                        viewModel.showCustomPubsPicker = true
-                    } label: {
-                        VStack(spacing: 8) {
-                            ZStack(alignment: .topTrailing) {
-                                Image(systemName: "mug.fill")
+                    // Team Assignment Mode
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Team Assignment")
+                            .font(.bricolage(.headline))
+
+                        Picker("Assignment Mode", selection: Binding(
+                            get: { viewModel.teamAssignmentMode },
+                            set: { viewModel.updateTeamAssignmentMode($0) }
+                        )) {
+                            Text("Mixed").tag(TeamAssignmentMode.mixed)
+                            Text("Sequential").tag(TeamAssignmentMode.sequential)
+                        }
+                        .pickerStyle(.segmented)
+
+                        Text(viewModel.teamAssignmentMode == .mixed
+                            ? "Players distributed evenly across teams"
+                            : "Fill each team before moving to the next")
+                            .font(.bricolage(.caption))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                    // Location and Custom Pubs buttons
+                    HStack(spacing: 12) {
+                        Button {
+                            viewModel.showLocationPicker = true
+                            Task {
+                                await viewModel.fetchCurrentLocationIfNeeded()
+                            }
+                        } label: {
+                            VStack(spacing: 6) {
+                                Image(systemName: "location.circle.fill")
                                     .font(.title2)
                                     .foregroundStyle(.indigo)
-                                if !viewModel.customPubs.isEmpty {
-                                    Text("\(viewModel.customPubs.count)")
-                                        .font(.bricolage(.caption2))
-                                        .foregroundStyle(.white)
-                                        .padding(4)
-                                        .background(Circle().fill(.indigo))
-                                        .offset(x: 8, y: -4)
-                                }
+                                Text("Search Area")
+                                    .font(.bricolage(.caption))
+                                Text(radiusDescription)
+                                    .font(.bricolage(.caption2))
+                                    .foregroundStyle(.secondary)
                             }
-                            Text("Custom Pubs")
-                                .font(.bricolage(.caption))
-                            Text(customPubsDescription)
-                                .font(.bricolage(.caption2))
-                                .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            viewModel.showCustomPubsPicker = true
+                        } label: {
+                            VStack(spacing: 6) {
+                                ZStack(alignment: .topTrailing) {
+                                    Image(systemName: "mug.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(.indigo)
+                                    if !viewModel.customPubs.isEmpty {
+                                        Text("\(viewModel.customPubs.count)")
+                                            .font(.bricolage(.caption2))
+                                            .foregroundStyle(.white)
+                                            .padding(4)
+                                            .background(Circle().fill(.indigo))
+                                            .offset(x: 8, y: -4)
+                                    }
+                                }
+                                Text("Custom Pubs")
+                                    .font(.bricolage(.caption))
+                                Text(customPubsDescription)
+                                    .font(.bricolage(.caption2))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // Start Game button
+                    Button {
+                        Task {
+                            await viewModel.startGame()
+                            dismiss()
+                        }
+                    } label: {
+                        HStack {
+                            if viewModel.isLoading {
+                                ProgressView()
+                                    .tint(.white)
+                            }
+                            Text(viewModel.isLoading ? "Starting Game..." : "Start Game")
+                                .font(.bricolage(.body))
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color(.secondarySystemGroupedBackground))
+                        .padding()
+                        .background(viewModel.players.count >= 2 ? Color.green : Color.gray)
+                        .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
-                    .buttonStyle(.plain)
+                    .disabled(viewModel.players.count < 2 || viewModel.isLoading)
+                    .padding(.top, 8)
                 }
-
-                Spacer()
-
-                // Start Game button
-                Button {
-                    Task {
-                        await viewModel.startGame()
-                        dismiss()
-                    }
-                } label: {
-                    HStack {
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .tint(.white)
-                        }
-                        Text("Start Game")
-                            .font(.bricolage(.body))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(viewModel.players.count >= 2 ? Color.indigo : Color.gray)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-                .disabled(viewModel.players.count < 2 || viewModel.isLoading)
-                .padding(.top, 14)
+                .padding()
             }
-            .padding()
-            .padding(.top, 14)
             .navigationTitle("Game Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -6,51 +6,57 @@ struct PubRevealView: View {
     @State private var hasStarted = false
 
     var body: some View {
-        VStack(spacing: 24) {
-            headerSection
+        ZStack {
+            MeshGradientBackground(theme: .amber)
 
-            if let team = viewModel.myTeam {
-                teamBadge(team)
-            }
+            VStack(spacing: 24) {
+                headerSection
 
-            ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(Array(viewModel.orderedPubs.enumerated()), id: \.element.id) { index, pub in
-                        PubCardView(
-                            pub: pub,
-                            index: index,
-                            isRevealed: viewModel.revealedIndices.contains(index),
-                            isFinal: index == viewModel.orderedPubs.count - 1
-                        )
-                        .offset(viewModel.shuffleOffsets[safe: index] ?? .zero)
-                    }
+                if let team = viewModel.myTeam {
+                    teamBadge(team)
                 }
-                .padding()
-            }
 
-            if viewModel.allRevealed && viewModel.isHost {
-                Button {
-                    Task {
-                        await viewModel.proceedToDrinkReveal()
-                        navigationPath.append(PartyStatus.drinkReveal)
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(Array(viewModel.orderedPubs.enumerated()), id: \.element.id) { index, pub in
+                            PubCardView(
+                                pub: pub,
+                                index: index,
+                                isRevealed: viewModel.revealedIndices.contains(index),
+                                isFinal: index == viewModel.orderedPubs.count - 1
+                            )
+                            .offset(viewModel.shuffleOffsets[safe: index] ?? .zero)
+                        }
                     }
-                } label: {
-                    Text("Continue to Drink Reveal")
+                    .padding()
+                }
+
+                if viewModel.allRevealed && viewModel.isHost {
+                    Button {
+                        Task {
+                            await viewModel.proceedToDrinkReveal()
+                            navigationPath.append(PartyStatus.drinkReveal)
+                        }
+                    } label: {
+                        Text("Continue to Drink Reveal")
+                            .font(.bricolage(.body))
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.orange)
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .padding(.horizontal)
+                } else if viewModel.allRevealed {
+                    Text("Waiting for host...")
                         .font(.bricolage(.body))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.orange)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .foregroundStyle(.white.opacity(0.7))
                 }
-                .padding(.horizontal)
-            } else if viewModel.allRevealed {
-                Text("Waiting for host...")
-                    .font(.bricolage(.body))
-                    .foregroundStyle(.secondary)
             }
         }
         .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
             if !hasStarted {
                 hasStarted = true
@@ -63,10 +69,11 @@ struct PubRevealView: View {
         VStack(spacing: 8) {
             Text("Your Pub Order")
                 .font(.bricolage(.title))
+                .foregroundStyle(.white)
 
             Text("Visit these pubs in order!")
                 .font(.bricolage(.subheadline))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.8))
         }
         .padding(.top)
     }

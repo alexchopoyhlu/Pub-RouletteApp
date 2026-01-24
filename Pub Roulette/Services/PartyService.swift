@@ -149,6 +149,11 @@ final class PartyService {
         }
     }
 
+    func updateTeam(_ team: Team) async throws {
+        guard let code = currentParty?.code else { return }
+        try await firebaseService.updateTeam(in: code, team: team)
+    }
+
     func finishTeamAssignment() async throws {
         guard let code = currentParty?.code, isHost else { return }
         try await firebaseService.updatePartyStatus(code: code, status: .pubReveal)

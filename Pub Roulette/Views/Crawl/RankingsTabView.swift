@@ -38,30 +38,35 @@ struct RankingsTabView: View {
         }
     }
 
+    private let baseHeight: CGFloat = 60
+    private let heightPerPub: CGFloat = 40
+
     private var podiumView: some View {
         HStack(alignment: .bottom, spacing: 12) {
             if viewModel.rankedTeams.count >= 2 {
-                podiumBar(team: viewModel.rankedTeams[1], position: 2, height: 140)
+                podiumBar(team: viewModel.rankedTeams[1], position: 2)
             } else {
-                emptyPodiumBar(position: 2, height: 140)
+                emptyPodiumBar(position: 2)
             }
 
             if viewModel.rankedTeams.count >= 1 {
-                podiumBar(team: viewModel.rankedTeams[0], position: 1, height: 200)
+                podiumBar(team: viewModel.rankedTeams[0], position: 1)
             } else {
-                emptyPodiumBar(position: 1, height: 200)
+                emptyPodiumBar(position: 1)
             }
 
             if viewModel.rankedTeams.count >= 3 {
-                podiumBar(team: viewModel.rankedTeams[2], position: 3, height: 100)
+                podiumBar(team: viewModel.rankedTeams[2], position: 3)
             } else {
-                emptyPodiumBar(position: 3, height: 100)
+                emptyPodiumBar(position: 3)
             }
         }
     }
 
-    private func podiumBar(team: Team, position: Int, height: CGFloat) -> some View {
-        VStack(spacing: 8) {
+    private func podiumBar(team: Team, position: Int) -> some View {
+        let height = baseHeight + CGFloat(team.currentPubIndex) * heightPerPub
+
+        return VStack(spacing: 8) {
             Text(teamInitials(team.name))
                 .font(.bricolage(.headline))
                 .foregroundStyle(.secondary)
@@ -75,10 +80,11 @@ struct RankingsTabView: View {
                     .font(.bricolage(size: 48))
                     .foregroundStyle(.white)
             }
+            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: team.currentPubIndex)
         }
     }
 
-    private func emptyPodiumBar(position: Int, height: CGFloat) -> some View {
+    private func emptyPodiumBar(position: Int) -> some View {
         VStack(spacing: 8) {
             Text("--")
                 .font(.bricolage(.headline))
@@ -86,7 +92,7 @@ struct RankingsTabView: View {
 
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.systemGray4))
-                .frame(width: 80, height: height)
+                .frame(width: 80, height: baseHeight)
         }
     }
 

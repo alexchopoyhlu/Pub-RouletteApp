@@ -37,6 +37,10 @@ final class TeamWheelViewModel {
         unassignedPlayers.isEmpty
     }
 
+    var currentPlayerTeamId: String? {
+        partyService.currentPlayer?.teamId
+    }
+
     var isSpinning: Bool {
         party?.wheelState.isSpinning ?? false
     }
@@ -302,6 +306,27 @@ final class TeamWheelViewModel {
             try await partyService.assignPubOrdersAndDrinks()
         } catch {
             print("Error proceeding to pub reveal: \(error)")
+        }
+    }
+
+    func updateTeam(teamId: String, newName: String, newColorHex: String) async {
+        guard var team = teams.first(where: { $0.id == teamId }) else { return }
+
+        let updatedTeam = Team(
+            id: team.id,
+            name: newName,
+            colorHex: newColorHex,
+            pubOrder: team.pubOrder,
+            drinkOrder: team.drinkOrder,
+            currentPubIndex: team.currentPubIndex,
+            finishTime: team.finishTime,
+            submissions: team.submissions
+        )
+
+        do {
+            try await partyService.updateTeam(updatedTeam)
+        } catch {
+            print("Error updating team: \(error)")
         }
     }
 }
