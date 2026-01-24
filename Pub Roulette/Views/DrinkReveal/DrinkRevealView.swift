@@ -36,7 +36,7 @@ struct DrinkRevealView: View {
                     }
                 } label: {
                     Text("Start the Crawl!")
-                        .font(.headline)
+                        .font(.bricolage(.headline))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.green)
@@ -46,6 +46,7 @@ struct DrinkRevealView: View {
                 .padding(.horizontal)
             } else if viewModel.allRevealed {
                 Text("Waiting for host to start...")
+                    .font(.bricolage(.body))
                     .foregroundStyle(.secondary)
             }
         }
@@ -62,11 +63,10 @@ struct DrinkRevealView: View {
     private var headerSection: some View {
         VStack(spacing: 8) {
             Text("Your Drinks")
-                .font(.title)
-                .fontWeight(.bold)
+                .font(.bricolage(.title))
 
             Text("Each pub has an assigned drink!")
-                .font(.subheadline)
+                .font(.bricolage(.subheadline))
                 .foregroundStyle(.secondary)
         }
         .padding(.top)
@@ -74,7 +74,7 @@ struct DrinkRevealView: View {
 
     private func teamBadge(_ team: Team) -> some View {
         Text(team.name)
-            .font(.headline)
+            .font(.bricolage(.headline))
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(team.color)
@@ -103,17 +103,16 @@ struct DrinkRevealView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("#\(index + 1)")
-                    .font(.caption)
+                    .font(.bricolage(.caption))
                     .foregroundStyle(.secondary)
 
                 Text(pub.name)
-                    .font(.headline)
+                    .font(.bricolage(.headline))
 
                 if isRevealed {
                     Text(drink)
-                        .font(.subheadline)
+                        .font(.bricolage(.subheadline))
                         .foregroundStyle(.orange)
-                        .fontWeight(.medium)
                 }
             }
 

@@ -41,11 +41,10 @@ struct ResultsView: View {
     private var headerSection: some View {
         VStack(spacing: 8) {
             Text("Results")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+                .font(.bricolage(.largeTitle))
 
             Text("The crawl is complete!")
-                .font(.subheadline)
+                .font(.bricolage(.subheadline))
                 .foregroundStyle(.secondary)
         }
         .padding(.top)
@@ -58,12 +57,10 @@ struct ResultsView: View {
                 .foregroundStyle(.yellow)
 
             Text("Winner!")
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.bricolage(.title2))
 
             Text(winner.name)
-                .font(.title)
-                .fontWeight(.heavy)
+                .font(.bricolage(.title))
                 .foregroundStyle(winner.color)
         }
         .padding()
@@ -82,8 +79,7 @@ struct ResultsView: View {
                     .frame(width: 40, height: 40)
 
                 Text("\(rank)")
-                    .font(.headline)
-                    .fontWeight(.bold)
+                    .font(.bricolage(.headline))
                     .foregroundStyle(.white)
             }
 
@@ -93,11 +89,11 @@ struct ResultsView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(team.name)
-                    .font(.headline)
+                    .font(.bricolage(.headline))
 
                 if let finishTime = team.finishTime {
                     Text("Finished \(finishTime.formatted(date: .omitted, time: .shortened))")
-                        .font(.caption)
+                        .font(.bricolage(.caption))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -126,11 +122,11 @@ struct ResultsView: View {
     private var loserMessageSection: some View {
         VStack(spacing: 8) {
             Text("Losing teams owe the winners a shot!")
-                .font(.headline)
+                .font(.bricolage(.headline))
                 .multilineTextAlignment(.center)
 
             Text("Pay up at the nearest bar")
-                .font(.caption)
+                .font(.bricolage(.caption))
                 .foregroundStyle(.secondary)
         }
         .padding()
@@ -144,6 +140,7 @@ struct ResultsView: View {
             partyService.leaveParty()
         } label: {
             Text("New Game")
+                .font(.bricolage(.body))
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(Color.blue)

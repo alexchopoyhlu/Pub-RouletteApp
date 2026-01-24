@@ -14,67 +14,78 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 40) {
-                Spacer()
+            ZStack {
+                MeshGradientBackground()
 
-                VStack(spacing: 12) {
-                    Text("Pub Roulette")
-                        .font(.system(size: 42, weight: .bold, design: .rounded))
+                VStack(spacing: 40) {
+                    Spacer()
 
-                    Text("The Ultimate Pub Crawl Game")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
+                    VStack(spacing: 12) {
+                        Text("Pub Roulette")
+                            .font(.bricolage(size: 42))
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
 
-                VStack(spacing: 16) {
-                    TextField("Your Name", text: $playerName)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.title3)
-                        .multilineTextAlignment(.center)
-                        .autocorrectionDisabled()
-                        .padding(.horizontal, 40)
-                }
+                        Text("The Ultimate Pub Crawl Game")
+                            .font(.bricolage(.subheadline))
+                            .foregroundStyle(.white.opacity(0.9))
+                    }
 
-                VStack(spacing: 16) {
-                    Button {
-                        Task { await createParty() }
-                    } label: {
-                        HStack {
-                            if isCreating {
-                                ProgressView()
-                                    .tint(.white)
-                            } else {
-                                Image(systemName: "plus.circle.fill")
+                    VStack(spacing: 16) {
+                        TextField("Your Name", text: $playerName)
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .font(.bricolage(.title3))
+                            .multilineTextAlignment(.center)
+                            .autocorrectionDisabled()
+                            .padding(.horizontal, 40)
+                    }
+
+                    VStack(spacing: 16) {
+                        Button {
+                            Task { await createParty() }
+                        } label: {
+                            HStack {
+                                if isCreating {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "plus.circle.fill")
+                                }
+                                Text("Create Party")
                             }
-                            Text("Create Party")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(playerName.isEmpty ? .white.opacity(0.3) : .white)
+                            .foregroundStyle(playerName.isEmpty ? .white.opacity(0.6) : .orange)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .font(.bricolage(.body))
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(playerName.isEmpty ? Color.gray : Color.blue)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    .disabled(playerName.isEmpty || isCreating)
+                        .disabled(playerName.isEmpty || isCreating)
 
-                    Button {
-                        showJoinSheet = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "person.2.fill")
-                            Text("Join Party")
+                        Button {
+                            showJoinSheet = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "person.2.fill")
+                                Text("Join Party")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .font(.bricolage(.body))
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(playerName.isEmpty ? Color.gray.opacity(0.3) : Color.green)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .disabled(playerName.isEmpty)
+                        .opacity(playerName.isEmpty ? 0.5 : 1)
                     }
-                    .disabled(playerName.isEmpty)
+                    .padding(.horizontal, 40)
+
+                    Spacer()
+                    Spacer()
                 }
-                .padding(.horizontal, 40)
-
-                Spacer()
-                Spacer()
             }
             .navigationDestination(isPresented: $navigateToLobby) {
                 LobbyView()
@@ -134,11 +145,11 @@ struct JoinPartySheet: View {
     var body: some View {
         VStack(spacing: 24) {
             Text("Enter Party Code")
-                .font(.headline)
+                .font(.bricolage(.headline))
 
             TextField("ABC123", text: $partyCode)
                 .textFieldStyle(.roundedBorder)
-                .font(.system(size: 32, weight: .bold, design: .monospaced))
+                .font(.system(size: 32, weight: .bold, design: .monospaced)) // Keep monospaced for code
                 .multilineTextAlignment(.center)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.characters)
@@ -161,6 +172,7 @@ struct JoinPartySheet: View {
                 .background(partyCode.count == 6 ? Color.green : Color.gray)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
+                .font(.bricolage(.body))
             }
             .disabled(partyCode.count != 6 || isJoining)
             .padding(.horizontal)

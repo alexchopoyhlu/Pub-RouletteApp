@@ -47,7 +47,7 @@ struct PubCardView: View {
                         .font(.system(size: 32, weight: .bold))
                         .foregroundStyle(.white.opacity(0.8))
                     Text("Pub #\(index + 1)")
-                        .font(.caption)
+                        .font(.bricolage(.caption))
                         .foregroundStyle(.white.opacity(0.6))
                 }
             }
@@ -61,14 +61,12 @@ struct PubCardView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text("#\(index + 1)")
-                            .font(.caption)
-                            .fontWeight(.bold)
+                            .font(.bricolage(.caption))
                             .foregroundStyle(isFinal ? .white.opacity(0.8) : .secondary)
 
                         if isFinal {
                             Text("FINAL")
-                                .font(.caption2)
-                                .fontWeight(.bold)
+                                .font(.bricolage(.caption2))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.white.opacity(0.3))
@@ -80,11 +78,11 @@ struct PubCardView: View {
                     }
 
                     Text(pub.name)
-                        .font(.headline)
+                        .font(.bricolage(.headline))
                         .foregroundStyle(isFinal ? .white : .primary)
 
                     Text(pub.address)
-                        .font(.caption)
+                        .font(.bricolage(.caption))
                         .foregroundStyle(isFinal ? .white.opacity(0.8) : .secondary)
                         .lineLimit(1)
                 }

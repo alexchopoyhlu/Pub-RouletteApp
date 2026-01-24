@@ -9,6 +9,27 @@ enum PartyStatus: String, Codable, Hashable {
     case finished
 }
 
+enum TeamAssignmentMode: String, Codable {
+    case sequential
+    case mixed
+}
+
+struct WheelState: Codable, Equatable {
+    var rotation: Double
+    var isSpinning: Bool
+    var spinStartTime: Date?
+    var targetRotation: Double?
+    var selectedPlayerId: String?
+
+    init(rotation: Double = 0, isSpinning: Bool = false, spinStartTime: Date? = nil, targetRotation: Double? = nil, selectedPlayerId: String? = nil) {
+        self.rotation = rotation
+        self.isSpinning = isSpinning
+        self.spinStartTime = spinStartTime
+        self.targetRotation = targetRotation
+        self.selectedPlayerId = selectedPlayerId
+    }
+}
+
 struct Party: Codable, Identifiable {
     var id: String { code }
     let code: String
@@ -19,6 +40,8 @@ struct Party: Codable, Identifiable {
     var searchLatitude: Double?
     var searchLongitude: Double?
     var customPubs: [Pub]
+    var teamAssignmentMode: TeamAssignmentMode
+    var wheelState: WheelState
     let createdAt: Date
     var players: [Player]
     var teams: [Team]
@@ -33,6 +56,8 @@ struct Party: Codable, Identifiable {
         searchLatitude: Double? = nil,
         searchLongitude: Double? = nil,
         customPubs: [Pub] = [],
+        teamAssignmentMode: TeamAssignmentMode = .mixed,
+        wheelState: WheelState = WheelState(),
         createdAt: Date = Date(),
         players: [Player] = [],
         teams: [Team] = [],
@@ -46,6 +71,8 @@ struct Party: Codable, Identifiable {
         self.searchLatitude = searchLatitude
         self.searchLongitude = searchLongitude
         self.customPubs = customPubs
+        self.teamAssignmentMode = teamAssignmentMode
+        self.wheelState = wheelState
         self.createdAt = createdAt
         self.players = players
         self.teams = teams

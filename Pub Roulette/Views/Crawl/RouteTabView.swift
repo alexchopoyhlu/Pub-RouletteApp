@@ -124,8 +124,7 @@ struct RoutePubCard: View {
                 // Top row: Name (left) and Drink (right)
                 HStack(alignment: .top) {
                     Text(pub.name)
-                        .font(.title3)
-                        .fontWeight(.bold)
+                        .font(.bricolage(.title3))
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
 
@@ -144,8 +143,7 @@ struct RoutePubCard: View {
                                 Image(systemName: "map.fill")
                                 Text("Maps")
                             }
-                            .font(.subheadline)
-                            .fontWeight(.medium)
+                            .font(.bricolage(.subheadline))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
@@ -169,8 +167,7 @@ struct RoutePubCard: View {
         HStack(spacing: 4) {
             Text(Constants.drinkEmojis[drink] ?? "🍺")
             Text(drink)
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(.bricolage(.subheadline))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
@@ -193,8 +190,7 @@ struct RoutePubCard: View {
         switch status {
         case .completed:
             Label("Completed", systemImage: "checkmark.circle.fill")
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(.bricolage(.subheadline))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
@@ -206,8 +202,7 @@ struct RoutePubCard: View {
                     Image(systemName: "person.2.fill")
                     Text("\(submissionCount)/\(totalPlayers)")
                 }
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(.bricolage(.subheadline))
                 .foregroundStyle(.black)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
@@ -216,8 +211,7 @@ struct RoutePubCard: View {
             }
         case .locked:
             Label("Locked", systemImage: "lock.fill")
-                .font(.subheadline)
-                .fontWeight(.medium)
+                .font(.bricolage(.subheadline))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)

@@ -36,6 +36,7 @@ struct PubRevealView: View {
                     }
                 } label: {
                     Text("Continue to Drink Reveal")
+                        .font(.bricolage(.body))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.orange)
@@ -45,6 +46,7 @@ struct PubRevealView: View {
                 .padding(.horizontal)
             } else if viewModel.allRevealed {
                 Text("Waiting for host...")
+                    .font(.bricolage(.body))
                     .foregroundStyle(.secondary)
             }
         }
@@ -60,11 +62,10 @@ struct PubRevealView: View {
     private var headerSection: some View {
         VStack(spacing: 8) {
             Text("Your Pub Order")
-                .font(.title)
-                .fontWeight(.bold)
+                .font(.bricolage(.title))
 
             Text("Visit these pubs in order!")
-                .font(.subheadline)
+                .font(.bricolage(.subheadline))
                 .foregroundStyle(.secondary)
         }
         .padding(.top)
@@ -72,7 +73,7 @@ struct PubRevealView: View {
 
     private func teamBadge(_ team: Team) -> some View {
         Text(team.name)
-            .font(.headline)
+            .font(.bricolage(.headline))
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(team.color)

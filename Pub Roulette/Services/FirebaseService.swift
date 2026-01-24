@@ -205,6 +205,8 @@ final class FirebaseService {
             "status": party.status.rawValue,
             "teamCount": party.teamCount,
             "searchRadius": party.searchRadius,
+            "teamAssignmentMode": party.teamAssignmentMode.rawValue,
+            "wheelState": encodeWheelState(party.wheelState),
             "createdAt": Timestamp(date: party.createdAt),
             "players": party.players.map { encodePlayer($0) },
             "teams": party.teams.map { encodeTeam($0) },
@@ -246,6 +248,12 @@ final class FirebaseService {
         let searchLatitude = data["searchLatitude"] as? Double
         let searchLongitude = data["searchLongitude"] as? Double
 
+        let teamAssignmentModeString = data["teamAssignmentMode"] as? String ?? "mixed"
+        let teamAssignmentMode = TeamAssignmentMode(rawValue: teamAssignmentModeString) ?? .mixed
+
+        let wheelStateData = data["wheelState"] as? [String: Any]
+        let wheelState = wheelStateData.flatMap { decodeWheelState(from: $0) } ?? WheelState()
+
         return Party(
             code: code,
             hostId: hostId,
@@ -255,6 +263,8 @@ final class FirebaseService {
             searchLatitude: searchLatitude,
             searchLongitude: searchLongitude,
             customPubs: customPubs,
+            teamAssignmentMode: teamAssignmentMode,
+            wheelState: wheelState,
             createdAt: createdAtTimestamp.dateValue(),
             players: players,
             teams: teams,
@@ -352,5 +362,50 @@ final class FirebaseService {
             latitude: latitude,
             longitude: longitude
         )
+    }
+
+    private func encodeWheelState(_ state: WheelState) -> [String: Any] {
+        var data: [String: Any] = [
+            "rotation": state.rotation,
+            "isSpinning": state.isSpinning
+        ]
+        if let spinStartTime = state.spinStartTime {
+            data["spinStartTime"] = Timestamp(date: spinStartTime)
+        }
+        if let targetRotation = state.targetRotation {
+            data["targetRotation"] = targetRotation
+        }
+        if let selectedPlayerId = state.selectedPlayerId {
+            data["selectedPlayerId"] = selectedPlayerId
+        }
+        return data
+    }
+
+    private func decodeWheelState(from data: [String: Any]) -> WheelState? {
+        let rotation = data["rotation"] as? Double ?? 0
+        let isSpinning = data["isSpinning"] as? Bool ?? false
+        let spinStartTime = (data["spinStartTime"] as? Timestamp)?.dateValue()
+        let targetRotation = data["targetRotation"] as? Double
+        let selectedPlayerId = data["selectedPlayerId"] as? String
+
+        return WheelState(
+            rotation: rotation,
+            isSpinning: isSpinning,
+            spinStartTime: spinStartTime,
+            targetRotation: targetRotation,
+            selectedPlayerId: selectedPlayerId
+        )
+    }
+
+    func updateWheelState(code: String, wheelState: WheelState) async throws {
+        try await db.collection("parties").document(code).updateData([
+            "wheelState": encodeWheelState(wheelState)
+        ])
+    }
+
+    func updateTeamAssignmentMode(code: String, mode: TeamAssignmentMode) async throws {
+        try await db.collection("parties").document(code).updateData([
+            "teamAssignmentMode": mode.rawValue
+        ])
     }
 }

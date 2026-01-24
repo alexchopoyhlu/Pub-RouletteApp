@@ -79,6 +79,16 @@ final class PartyService {
         try await firebaseService.updatePartySettings(code: code, teamCount: teamCount, searchRadius: searchRadius, searchLatitude: searchLatitude, searchLongitude: searchLongitude)
     }
 
+    func updateTeamAssignmentMode(_ mode: TeamAssignmentMode) async throws {
+        guard let code = currentParty?.code, isHost else { return }
+        try await firebaseService.updateTeamAssignmentMode(code: code, mode: mode)
+    }
+
+    func updateWheelState(_ state: WheelState) async throws {
+        guard let code = currentParty?.code else { return }
+        try await firebaseService.updateWheelState(code: code, wheelState: state)
+    }
+
     func updateCustomPubs(_ pubs: [Pub]) async throws {
         guard let code = currentParty?.code, isHost else { return }
         try await firebaseService.updateCustomPubs(code: code, customPubs: pubs)

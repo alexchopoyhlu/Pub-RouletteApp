@@ -61,7 +61,7 @@ struct LocationPickerSheet: View {
                             .scaleEffect(1.5)
                             .tint(.white)
                         Text("Finding your location...")
-                            .font(.headline)
+                            .font(.bricolage(.headline))
                             .foregroundStyle(.white)
                     }
                     .padding(24)
@@ -136,10 +136,10 @@ struct LocationPickerSheet: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("Search Radius")
-                        .font(.headline)
+                        .font(.bricolage(.headline))
                     Spacer()
                     Text(radiusText)
-                        .font(.headline)
+                        .font(.bricolage(.headline))
                         .foregroundStyle(.orange)
                 }
 
@@ -155,11 +155,11 @@ struct LocationPickerSheet: View {
 
                 HStack {
                     Text("\(Constants.minSearchRadius)m")
-                        .font(.caption)
+                        .font(.bricolage(.caption))
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text("\(Constants.maxSearchRadius / 1000)km")
-                        .font(.caption)
+                        .font(.bricolage(.caption))
                         .foregroundStyle(.secondary)
                 }
             }

@@ -78,10 +78,10 @@ struct CustomPubsSheet: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
             Text("Search for pubs to add")
-                .font(.headline)
+                .font(.bricolage(.headline))
                 .foregroundStyle(.secondary)
             Text("These will be added to the random selection pool")
-                .font(.caption)
+                .font(.bricolage(.caption))
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
             Spacer()
@@ -97,9 +97,9 @@ struct CustomPubsSheet: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(pub.name)
-                                    .font(.body)
+                                    .font(.bricolage(.body))
                                 Text(pub.address)
-                                    .font(.caption)
+                                    .font(.bricolage(.caption))
                                     .foregroundStyle(.secondary)
                             }
 
@@ -122,9 +122,9 @@ struct CustomPubsSheet: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.name ?? "Unknown")
-                                    .font(.body)
+                                    .font(.bricolage(.body))
                                 Text(formatAddress(item))
-                                    .font(.caption)
+                                    .font(.bricolage(.caption))
                                     .foregroundStyle(.secondary)
                             }
 

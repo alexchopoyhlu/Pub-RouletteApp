@@ -7,6 +7,21 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         FirebaseApp.configure()
+
+        // Debug: Print available fonts to find the correct name
+        #if DEBUG
+        print("=== Looking for Bricolage fonts ===")
+        for family in UIFont.familyNames.sorted() {
+            if family.lowercased().contains("bricol") {
+                print("Font Family: \(family)")
+                for name in UIFont.fontNames(forFamilyName: family) {
+                    print("  Font Name: \(name)")
+                }
+            }
+        }
+        print("=== End font search ===")
+        #endif
+
         return true
     }
 }

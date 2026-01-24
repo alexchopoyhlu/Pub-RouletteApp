@@ -8,25 +8,46 @@ import UIKit
 struct LobbyView: View {
     @State private var viewModel = LobbyViewModel()
     @State private var navigationPath = NavigationPath()
+    @State private var showHostControls = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-NavigationStack(path: $navigationPath) {
-            VStack(spacing: 0) {
-                partyCodeSection
+        NavigationStack(path: $navigationPath) {
+            ZStack {
+                MeshGradientBackground(theme: .midnight)
 
-                Divider()
+                VStack(spacing: 0) {
+                    partyCodeSection
 
-                playerListSection
+                    playerListSection
 
-                if viewModel.isHost {
-                    Divider()
-                    hostControlsSection
+                    if viewModel.isHost {
+                        Spacer()
+                        // Button to open host controls sheet
+                        Button {
+                            showHostControls = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "slider.horizontal.3")
+                                Text("Game Settings")
+                            }
+                            .font(.bricolage(.headline))
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+                    }
                 }
             }
-            .navigationTitle("Party Lobby")
+            .navigationTitle("Lobby")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
+            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Leave") {
@@ -39,6 +60,12 @@ NavigationStack(path: $navigationPath) {
             .navigationDestination(for: PartyStatus.self) { status in
                 destinationView(for: status)
             }
+            .sheet(isPresented: $showHostControls) {
+                HostControlsSheet(viewModel: viewModel)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+                    .presentationBackground(.ultraThinMaterial)
+            }
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK") {}
             } message: {
@@ -50,6 +77,7 @@ NavigationStack(path: $navigationPath) {
             .onAppear {
                 if viewModel.isHost {
                     viewModel.requestLocationPermission()
+                    showHostControls = true
                 }
             }
         }
@@ -58,18 +86,20 @@ NavigationStack(path: $navigationPath) {
     private var partyCodeSection: some View {
         VStack(spacing: 8) {
             Text("Party Code")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(.bricolage(.subheadline))
+                .foregroundStyle(.white.opacity(0.7))
 
             Text(viewModel.partyCode)
-                .font(.system(size: 48, weight: .bold, design: .monospaced))
+                .font(.system(size: 48, weight: .bold, design: .monospaced)) // Keep monospaced for code
+                .foregroundStyle(.white)
                 .kerning(8)
 
             Button {
                 UIPasteboard.general.string = viewModel.partyCode
             } label: {
                 Label("Copy Code", systemImage: "doc.on.doc")
-                    .font(.caption)
+                    .font(.bricolage(.caption))
+                    .foregroundStyle(.white.opacity(0.8))
             }
         }
         .padding(.vertical, 24)
@@ -79,11 +109,12 @@ NavigationStack(path: $navigationPath) {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Players")
-                    .font(.headline)
+                    .font(.bricolage(.headline))
+                    .foregroundStyle(.white)
                 Spacer()
                 Text("\(viewModel.players.count)")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
+                    .font(.bricolage(.headline))
+                    .foregroundStyle(.white.opacity(0.6))
             }
             .padding(.horizontal)
             .padding(.top, 16)
@@ -95,6 +126,8 @@ NavigationStack(path: $navigationPath) {
                             player: player,
                             isHost: player.id == viewModel.party?.hostId
                         )
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
                 .padding(.horizontal)
@@ -102,157 +135,7 @@ NavigationStack(path: $navigationPath) {
         }
     }
 
-    private var hostControlsSection: some View {
-        VStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Teams: \(viewModel.teamCount)")
-                    .font(.subheadline)
-                Slider(
-                    value: Binding(
-                        get: { Double(viewModel.teamCount) },
-                        set: { viewModel.teamCount = Int($0) }
-                    ),
-                    in: Double(Constants.minTeamCount)...Double(Constants.maxTeamCount),
-                    step: 1
-                )
-                .onChange(of: viewModel.teamCount) { _, _ in
-                    Task { await viewModel.updateSettings() }
-                }
-            }
-
-            // Location and Custom Pubs buttons
-            HStack(spacing: 12) {
-                // Location selection button
-                Button {
-                    viewModel.showLocationPicker = true
-                    Task {
-                        await viewModel.fetchCurrentLocationIfNeeded()
-                    }
-                } label: {
-                    VStack(spacing: 8) {
-                        Image(systemName: "location.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(.orange)
-                        Text("Search Area")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                        Text(radiusDescription)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .buttonStyle(.plain)
-
-                // Custom pubs button
-                Button {
-                    viewModel.showCustomPubsPicker = true
-                } label: {
-                    VStack(spacing: 8) {
-                        ZStack(alignment: .topTrailing) {
-                            Image(systemName: "mug.fill")
-                                .font(.title2)
-                                .foregroundStyle(.orange)
-                            if !viewModel.customPubs.isEmpty {
-                                Text("\(viewModel.customPubs.count)")
-                                    .font(.caption2)
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(.white)
-                                    .padding(4)
-                                    .background(Circle().fill(.orange))
-                                    .offset(x: 8, y: -4)
-                            }
-                        }
-                        Text("Custom Pubs")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                        Text(customPubsDescription)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                .buttonStyle(.plain)
-            }
-
-            Button {
-                Task { await viewModel.startGame() }
-            } label: {
-                HStack {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .tint(.white)
-                    }
-                    Text("Start Game")
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(viewModel.players.count >= 2 ? Color.orange : Color.gray)
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-            .disabled(viewModel.players.count < 2 || viewModel.isLoading)
-        }
-        .padding()
-        .background(Color(.systemGroupedBackground))
-        .sheet(isPresented: $viewModel.showLocationPicker) {
-            LocationPickerSheet(
-                initialLocation: initialLocationForPicker,
-                initialRadius: viewModel.searchRadius
-            ) { coordinate, radius in
-                viewModel.updateLocation(
-                    latitude: coordinate.latitude,
-                    longitude: coordinate.longitude,
-                    radius: radius
-                )
-            }
-            .presentationDetents([.medium, .large])
-        }
-        .sheet(isPresented: $viewModel.showCustomPubsPicker) {
-            CustomPubsSheet(
-                customPubs: viewModel.customPubs,
-                userLocation: viewModel.currentLocation?.coordinate,
-                onAddPub: { viewModel.addCustomPub($0) },
-                onRemovePub: { viewModel.removeCustomPub($0) }
-            )
-            .presentationDetents([.medium, .large])
-        }
-    }
-
-    private var radiusDescription: String {
-        if viewModel.searchRadius >= 1000 {
-            let km = Double(viewModel.searchRadius) / 1000.0
-            return String(format: "%.1f km radius", km)
-        }
-        return "\(viewModel.searchRadius)m radius"
-    }
-
-    private var customPubsDescription: String {
-        let count = viewModel.customPubs.count
-        if count == 0 {
-            return "Add specific pubs"
-        }
-        return "\(count) pub\(count == 1 ? "" : "s") added"
-    }
-
-    private var initialLocationForPicker: CLLocationCoordinate2D? {
-        if let lat = viewModel.searchLatitude, let lon = viewModel.searchLongitude {
-            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
-        }
-        if let location = viewModel.currentLocation {
-            return location.coordinate
-        }
-        // Return nil to trigger location fetch in the sheet
-        return nil
-    }
-
-private func handleStatusChange(oldStatus: PartyStatus?, newStatus: PartyStatus?) {
+    private func handleStatusChange(oldStatus: PartyStatus?, newStatus: PartyStatus?) {
         print("LobbyView: Status change from \(String(describing: oldStatus)) to \(String(describing: newStatus))")
         print("LobbyView: Current navigation path count: \(navigationPath.count)")
 
@@ -297,6 +180,211 @@ private func handleStatusChange(oldStatus: PartyStatus?, newStatus: PartyStatus?
         case .lobby:
             EmptyView()
         }
+    }
+}
+
+// MARK: - Host Controls Sheet
+
+struct HostControlsSheet: View {
+    @Bindable var viewModel: LobbyViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 14) {
+                // Teams slider
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Teams")
+                            .font(.bricolage(.headline))
+                        Spacer()
+                        Text("\(viewModel.teamCount)")
+                            .font(.bricolage(.title2))
+                            .foregroundStyle(.indigo)
+                    }
+                    Slider(
+                        value: Binding(
+                            get: { Double(viewModel.teamCount) },
+                            set: { viewModel.teamCount = Int($0) }
+                        ),
+                        in: Double(Constants.minTeamCount)...Double(Constants.maxTeamCount),
+                        step: 1
+                    )
+                    .tint(.indigo)
+                    .onChange(of: viewModel.teamCount) { _, _ in
+                        Task { await viewModel.updateSettings() }
+                    }
+                }
+                .padding()
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                // Team Assignment Mode
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Team Assignment")
+                        .font(.bricolage(.headline))
+
+                    Picker("Assignment Mode", selection: Binding(
+                        get: { viewModel.teamAssignmentMode },
+                        set: { viewModel.updateTeamAssignmentMode($0) }
+                    )) {
+                        Text("Mixed").tag(TeamAssignmentMode.mixed)
+                        Text("Sequential").tag(TeamAssignmentMode.sequential)
+                    }
+                    .pickerStyle(.segmented)
+
+                    Text(viewModel.teamAssignmentMode == .mixed
+                        ? "Players distributed evenly across teams"
+                        : "Fill each team before moving to the next")
+                        .font(.bricolage(.caption))
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                // Location and Custom Pubs buttons
+                HStack(spacing: 12) {
+                    Button {
+                        viewModel.showLocationPicker = true
+                        Task {
+                            await viewModel.fetchCurrentLocationIfNeeded()
+                        }
+                    } label: {
+                        VStack(spacing: 8) {
+                            Image(systemName: "location.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.indigo)
+                            Text("Search Area")
+                                .font(.bricolage(.caption))
+                            Text(radiusDescription)
+                                .font(.bricolage(.caption2))
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        viewModel.showCustomPubsPicker = true
+                    } label: {
+                        VStack(spacing: 8) {
+                            ZStack(alignment: .topTrailing) {
+                                Image(systemName: "mug.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(.indigo)
+                                if !viewModel.customPubs.isEmpty {
+                                    Text("\(viewModel.customPubs.count)")
+                                        .font(.bricolage(.caption2))
+                                        .foregroundStyle(.white)
+                                        .padding(4)
+                                        .background(Circle().fill(.indigo))
+                                        .offset(x: 8, y: -4)
+                                }
+                            }
+                            Text("Custom Pubs")
+                                .font(.bricolage(.caption))
+                            Text(customPubsDescription)
+                                .font(.bricolage(.caption2))
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Spacer()
+
+                // Start Game button
+                Button {
+                    Task {
+                        await viewModel.startGame()
+                        dismiss()
+                    }
+                } label: {
+                    HStack {
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .tint(.white)
+                        }
+                        Text("Start Game")
+                            .font(.bricolage(.body))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(viewModel.players.count >= 2 ? Color.indigo : Color.gray)
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+                .disabled(viewModel.players.count < 2 || viewModel.isLoading)
+                .padding(.top, 14)
+            }
+            .padding()
+            .padding(.top, 14)
+            .navigationTitle("Game Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .sheet(isPresented: $viewModel.showLocationPicker) {
+                LocationPickerSheet(
+                    initialLocation: initialLocationForPicker,
+                    initialRadius: viewModel.searchRadius
+                ) { coordinate, radius in
+                    viewModel.updateLocation(
+                        latitude: coordinate.latitude,
+                        longitude: coordinate.longitude,
+                        radius: radius
+                    )
+                }
+                .presentationDetents([.medium, .large])
+            }
+            .sheet(isPresented: $viewModel.showCustomPubsPicker) {
+                CustomPubsSheet(
+                    customPubs: viewModel.customPubs,
+                    userLocation: viewModel.currentLocation?.coordinate,
+                    onAddPub: { viewModel.addCustomPub($0) },
+                    onRemovePub: { viewModel.removeCustomPub($0) }
+                )
+                .presentationDetents([.medium, .large])
+            }
+        }
+    }
+
+    private var radiusDescription: String {
+        if viewModel.searchRadius >= 1000 {
+            let km = Double(viewModel.searchRadius) / 1000.0
+            return String(format: "%.1f km radius", km)
+        }
+        return "\(viewModel.searchRadius)m radius"
+    }
+
+    private var customPubsDescription: String {
+        let count = viewModel.customPubs.count
+        if count == 0 {
+            return "Add specific pubs"
+        }
+        return "\(count) pub\(count == 1 ? "" : "s") added"
+    }
+
+    private var initialLocationForPicker: CLLocationCoordinate2D? {
+        if let lat = viewModel.searchLatitude, let lon = viewModel.searchLongitude {
+            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        }
+        if let location = viewModel.currentLocation {
+            return location.coordinate
+        }
+        return nil
     }
 }
 

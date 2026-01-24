@@ -11,6 +11,7 @@ final class LobbyViewModel {
     var searchRadius: Int = 1000
     var searchLatitude: Double?
     var searchLongitude: Double?
+    var teamAssignmentMode: TeamAssignmentMode = .mixed
     var isLoading: Bool = false
     var errorMessage: String?
     var showError: Bool = false
@@ -52,6 +53,18 @@ final class LobbyViewModel {
             searchRadius = party.searchRadius
             searchLatitude = party.searchLatitude
             searchLongitude = party.searchLongitude
+            teamAssignmentMode = party.teamAssignmentMode
+        }
+    }
+
+    func updateTeamAssignmentMode(_ mode: TeamAssignmentMode) {
+        teamAssignmentMode = mode
+        Task {
+            do {
+                try await partyService.updateTeamAssignmentMode(mode)
+            } catch {
+                showError(error)
+            }
         }
     }
 

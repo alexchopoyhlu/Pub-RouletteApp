@@ -21,7 +21,7 @@ struct RankingsTabView: View {
 
     private func positionBanner(position: Int, teamName: String) -> some View {
         Text("Your team is in \(positionText(position)) position, keep going!")
-            .font(.headline)
+            .font(.bricolage(.headline))
             .multilineTextAlignment(.center)
             .padding()
             .frame(maxWidth: .infinity)
@@ -63,7 +63,7 @@ struct RankingsTabView: View {
     private func podiumBar(team: Team, position: Int, height: CGFloat) -> some View {
         VStack(spacing: 8) {
             Text(teamInitials(team.name))
-                .font(.headline)
+                .font(.bricolage(.headline))
                 .foregroundStyle(.secondary)
 
             ZStack {
@@ -72,7 +72,7 @@ struct RankingsTabView: View {
                     .frame(width: 80, height: height)
 
                 Text("\(team.currentPubIndex)")
-                    .font(.system(size: 48, weight: .bold))
+                    .font(.bricolage(size: 48))
                     .foregroundStyle(.white)
             }
         }
@@ -81,7 +81,7 @@ struct RankingsTabView: View {
     private func emptyPodiumBar(position: Int, height: CGFloat) -> some View {
         VStack(spacing: 8) {
             Text("--")
-                .font(.headline)
+                .font(.bricolage(.headline))
                 .foregroundStyle(.secondary)
 
             RoundedRectangle(cornerRadius: 12)

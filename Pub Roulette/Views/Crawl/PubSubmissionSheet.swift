@@ -22,7 +22,7 @@ struct PubSubmissionSheet: View {
 
             // MARK: Header
             Text("Pub #\(pubIndex + 1)")
-                .font(.headline)
+                .font(.bricolage(.headline))
                 .padding(.top, 8)
 
             // MARK: Pub row
@@ -52,11 +52,10 @@ extension PubSubmissionSheet {
             // Pub info card
             VStack(alignment: .leading, spacing: 8) {
                 Text(pub.name)
-                    .font(.headline)
-                    .fontWeight(.bold)
+                    .font(.bricolage(.headline))
 
                 Text(pub.address)
-                    .font(.footnote)
+                    .font(.bricolage(.footnote))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, minHeight: 104, alignment: .leading)
@@ -79,7 +78,7 @@ extension PubSubmissionSheet {
             VStack(spacing: 4) {
                 Image(systemName: "map.fill")
                 Text("Maps")
-                    .font(.caption)
+                    .font(.bricolage(.caption))
             }
             .frame(width: 80, height: 48)
             .background(Color.blue)
@@ -93,8 +92,7 @@ extension PubSubmissionSheet {
             Text(Constants.drinkEmojis[drink] ?? "🍺")
                 .font(.title3)
             Text(drink)
-                .font(.caption2)
-                .fontWeight(.medium)
+                .font(.bricolage(.caption2))
         }
         .frame(width: 80, height: 48)
         .background(Color.green)
@@ -111,7 +109,7 @@ extension PubSubmissionSheet {
                     .font(.title2)
 
                 Text(hasImage ? "Photo Added" : "Open Camera")
-                    .font(.headline)
+                    .font(.bricolage(.headline))
             }
             .frame(maxWidth: .infinity)
             .padding()
@@ -127,7 +125,7 @@ extension PubSubmissionSheet {
             dismiss()
         } label: {
             Text("Submit")
-                .font(.headline)
+                .font(.bricolage(.headline))
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(hasImage ? Color.green : Color.gray.opacity(0.4))

@@ -73,3 +73,41 @@ extension String {
         return self.count == 6 && self.uppercased().unicodeScalars.allSatisfy { allowedCharacters.contains($0) }
     }
 }
+
+// MARK: - Custom Font
+
+extension Font {
+    /// Bricolage Grotesque SemiBold - use this for all custom text
+    static func bricolage(_ style: Font.TextStyle) -> Font {
+        let size = textStyleSize(style)
+        return bricolage(size: size)
+    }
+
+    static func bricolage(size: CGFloat, weight: Font.Weight = .semibold) -> Font {
+        // We only have SemiBold variant, so we use it regardless of weight
+        return .custom("BricolageGrotesque-SemiBold", size: size)
+    }
+
+    private static func textStyleSize(_ style: Font.TextStyle) -> CGFloat {
+        switch style {
+        case .largeTitle: return 34
+        case .title: return 28
+        case .title2: return 22
+        case .title3: return 20
+        case .headline: return 17
+        case .body: return 17
+        case .callout: return 16
+        case .subheadline: return 15
+        case .footnote: return 13
+        case .caption: return 12
+        case .caption2: return 11
+        @unknown default: return 17
+        }
+    }
+}
+
+extension UIFont {
+    static func bricolage(size: CGFloat) -> UIFont {
+        return UIFont(name: "BricolageGrotesque-SemiBold", size: size) ?? .systemFont(ofSize: size, weight: .semibold)
+    }
+}

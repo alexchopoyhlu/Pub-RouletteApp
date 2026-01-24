@@ -11,20 +11,18 @@ struct PlayerListView: View {
                 .frame(width: 44, height: 44)
                 .overlay {
                     Text(player.name.prefix(1).uppercased())
-                        .font(.headline)
+                        .font(.bricolage(.headline))
                         .foregroundStyle(.blue)
                 }
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(player.name)
-                        .font(.body)
-                        .fontWeight(.medium)
+                        .font(.bricolage(.body))
 
                     if isHost {
                         Text("HOST")
-                            .font(.caption2)
-                            .fontWeight(.bold)
+                            .font(.bricolage(.caption2))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.orange)
@@ -34,13 +32,13 @@ struct PlayerListView: View {
                 }
 
                 Text("Joined \(player.joinedAt.timeAgoDisplay())")
-                    .font(.caption)
+                    .font(.bricolage(.caption))
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            if let teamId = player.teamId {
+            if player.teamId != nil {
                 Circle()
                     .fill(Color.green)
                     .frame(width: 12, height: 12)
