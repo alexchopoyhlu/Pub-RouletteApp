@@ -19,13 +19,14 @@ struct DrinkRevealView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         ForEach(Array(zip(viewModel.pubs, viewModel.drinks).enumerated()), id: \.offset) { index, item in
+                            let phase = viewModel.slotPhases[safe: index] ?? .idle
                             drinkPubRow(
                                 pub: item.0,
                                 drink: item.1,
                                 index: index,
-                                isRevealed: index < viewModel.revealedCount,
+                                isRevealed: phase == .revealed,
                                 slotOffset: viewModel.slotOffsets[safe: index] ?? 0,
-                                isSpinning: viewModel.slotSpinning[safe: index] ?? false
+                                isSpinning: phase == .spinning || phase == .stopping
                             )
                         }
                     }
@@ -128,7 +129,6 @@ struct DrinkRevealView: View {
                             drinks: Constants.drinkTypes,
                             targetDrink: drink,
                             offset: slotOffset,
-                            isRevealed: false,
                             isSpinning: isSpinning
                         )
                         .frame(width: 50, height: 50)

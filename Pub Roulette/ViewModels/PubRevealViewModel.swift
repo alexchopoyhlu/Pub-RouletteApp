@@ -1,6 +1,5 @@
 import Foundation
 import SwiftUI
-import UIKit
 
 @Observable
 final class PubRevealViewModel {
@@ -8,7 +7,8 @@ final class PubRevealViewModel {
 
     var revealedIndices: Set<Int> = []
     var isShuffling: Bool = false
-    var shuffleOffsets: [CGSize] = []
+    var cardOffsets: [CGFloat] = []  // Vertical offsets for shuffle
+    var cardZIndices: [Double] = []  // Z-index for layering during shuffle
     var allRevealed: Bool = false
 
     var party: Party? {
@@ -35,27 +35,68 @@ final class PubRevealViewModel {
     }
 
     init() {
-        shuffleOffsets = Array(repeating: .zero, count: 10)
+        cardOffsets = Array(repeating: 0, count: 10)
+        cardZIndices = Array(repeating: 0, count: 10)
     }
 
     func startShuffleAnimation() async {
-        isShuffling = true
+        // Wait for data to be available (up to 5 seconds)
+        var attempts = 0
+        while orderedPubs.isEmpty && attempts < 50 {
+            try? await Task.sleep(for: .milliseconds(100))
+            attempts += 1
+        }
 
-        for _ in 0..<8 {
-            withAnimation(.easeInOut(duration: 0.15)) {
-                shuffleOffsets = shuffleOffsets.indices.map { _ in
-                    CGSize(
-                        width: CGFloat.random(in: -30...30),
-                        height: CGFloat.random(in: -20...20)
-                    )
+        isShuffling = true
+        let cardCount = orderedPubs.count
+        guard cardCount > 1 else {
+            isShuffling = false
+            await revealCardsSequentially()
+            return
+        }
+
+        let cardHeight: CGFloat = 112  // Approximate card height + spacing
+
+        // Perform 3 shuffle passes
+        for shufflePass in 0..<3 {
+            // Gather cards to center (stack them)
+            withAnimation(.easeInOut(duration: 0.3)) {
+                for i in 0..<cardCount {
+                    // Move all cards toward the center position
+                    let centerIndex = CGFloat(cardCount - 1) / 2
+                    let distanceFromCenter = CGFloat(i) - centerIndex
+                    cardOffsets[i] = -distanceFromCenter * cardHeight * 0.8
+                    // Higher cards (later in list) go on top during gather
+                    cardZIndices[i] = Double(shufflePass % 2 == 0 ? i : cardCount - i)
                 }
             }
-            try? await Task.sleep(for: .milliseconds(150))
+
+            try? await Task.sleep(for: .milliseconds(300))
+
+            // Scatter cards to new random-ish positions (simulating shuffle)
+            withAnimation(.easeInOut(duration: 0.35)) {
+                var positions = Array(0..<cardCount).shuffled()
+                for i in 0..<cardCount {
+                    let newPosition = positions[i]
+                    let offset = CGFloat(newPosition - i) * cardHeight
+                    cardOffsets[i] = offset
+                    // Alternate which cards are on top
+                    cardZIndices[i] = Double(newPosition)
+                }
+            }
+
+            try? await Task.sleep(for: .milliseconds(350))
         }
 
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-            shuffleOffsets = Array(repeating: .zero, count: shuffleOffsets.count)
+        // Final gather - bring all cards back to original positions
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+            for i in 0..<cardCount {
+                cardOffsets[i] = 0
+                cardZIndices[i] = 0
+            }
         }
+
+        try? await Task.sleep(for: .milliseconds(400))
 
         isShuffling = false
 

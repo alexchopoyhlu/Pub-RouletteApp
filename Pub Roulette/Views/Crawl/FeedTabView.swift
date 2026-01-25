@@ -51,12 +51,17 @@ struct FeedTabView: View {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     ForEach(messages) { message in
-                        MessageBubbleView(
-                            message: message,
-                            isCurrentUser: message.senderId == partyService.currentPlayer?.id,
-                            teamColor: teamColor(for: message.teamId, partyService: partyService)
-                        )
-                        .id(message.id)
+                        if message.isSystemMessage {
+                            SystemMessageView(message: message)
+                                .id(message.id)
+                        } else {
+                            MessageBubbleView(
+                                message: message,
+                                isCurrentUser: message.senderId == partyService.currentPlayer?.id,
+                                teamColor: teamColor(for: message.teamId, partyService: partyService)
+                            )
+                            .id(message.id)
+                        }
                     }
                 }
                 .padding()
@@ -177,6 +182,47 @@ struct MessageBubbleView: View {
                 Spacer(minLength: 60)
             }
         }
+    }
+}
+
+struct SystemMessageView: View {
+    let message: Message
+
+    var body: some View {
+        Text(message.text)
+            .font(.bricolage(size: 14, weight: .semibold))
+            .foregroundStyle(.white)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background {
+                // Monochrome mesh gradient - dark with subtle center glow
+                if #available(iOS 18.0, *) {
+                    MeshGradient(
+                        width: 3,
+                        height: 3,
+                        points: [
+                            [0.0, 0.0], [0.5, 0.0], [1.0, 0.0],
+                            [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
+                            [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
+                        ],
+                        colors: [
+                            .black, .black, .black,
+                            Color(white: 0.1), Color(white: 0.25), Color(white: 0.1),
+                            .black, .black, .black
+                        ]
+                    )
+                } else {
+                    // Fallback for older iOS
+                    LinearGradient(
+                        colors: [.black, Color(white: 0.2), .black],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 

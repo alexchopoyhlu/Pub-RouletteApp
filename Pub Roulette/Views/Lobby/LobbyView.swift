@@ -56,8 +56,10 @@ struct LobbyView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Leave") {
                         Haptics.warning()
-                        viewModel.leaveParty()
-                        dismiss()
+                        Task {
+                            await viewModel.leaveParty()
+                            dismiss()
+                        }
                     }
                     .foregroundStyle(.red)
                 }
@@ -221,7 +223,7 @@ struct HostControlsSheet: View {
                                     }
                                 }
                                 .pickerStyle(.wheel)
-                                .frame(height: 120)
+                                .frame(height: 80)
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -249,7 +251,7 @@ struct HostControlsSheet: View {
                                     }
                                 }
                                 .pickerStyle(.wheel)
-                                .frame(height: 120)
+                                .frame(height: 80)
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -288,6 +290,8 @@ struct HostControlsSheet: View {
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(.ultraThinMaterial)
                         )
+
+                        
 
                         // Location and Custom Pubs buttons
                         HStack(spacing: 12) {
@@ -355,6 +359,36 @@ struct HostControlsSheet: View {
                         DrinkTypeSelectorView(selectedDrinkTypes: $viewModel.selectedDrinkTypes) { drinkType in
                             viewModel.toggleDrinkType(drinkType)
                         }
+                        
+                        // Drink Distribution Mode
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Drink Distribution")
+                                .font(.bricolage(.headline))
+                                .foregroundStyle(.white)
+
+                            Picker("Drink Mode", selection: Binding(
+                                get: { viewModel.drinkDistributionMode },
+                                set: { newMode in
+                                    Haptics.selection()
+                                    viewModel.updateDrinkDistributionMode(newMode)
+                                }
+                            )) {
+                                Text("Random").tag(DrinkDistributionMode.random)
+                                Text("One of Each").tag(DrinkDistributionMode.oneOfEach)
+                            }
+                            .pickerStyle(.segmented)
+
+                            Text(viewModel.drinkDistributionMode == .random
+                                ? "Drinks assigned randomly, may repeat"
+                                : "Each selected drink appears at least once")
+                                .font(.bricolage(.caption))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(.ultraThinMaterial)
+                        )
 
                         // Start Game button
                         Button {

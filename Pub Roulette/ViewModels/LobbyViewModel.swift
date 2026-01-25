@@ -13,6 +13,7 @@ final class LobbyViewModel {
     var searchLatitude: Double?
     var searchLongitude: Double?
     var teamAssignmentMode: TeamAssignmentMode = .mixed
+    var drinkDistributionMode: DrinkDistributionMode = .random
     var selectedDrinkTypes: Set<String> = Set(Constants.defaultSelectedDrinkTypes)
     var isLoading: Bool = false
     var errorMessage: String?
@@ -57,6 +58,7 @@ final class LobbyViewModel {
             searchLatitude = party.searchLatitude
             searchLongitude = party.searchLongitude
             teamAssignmentMode = party.teamAssignmentMode
+            drinkDistributionMode = party.drinkDistributionMode
             selectedDrinkTypes = Set(party.selectedDrinkTypes)
         }
     }
@@ -66,6 +68,17 @@ final class LobbyViewModel {
         Task {
             do {
                 try await partyService.updateTeamAssignmentMode(mode)
+            } catch {
+                showError(error)
+            }
+        }
+    }
+
+    func updateDrinkDistributionMode(_ mode: DrinkDistributionMode) {
+        drinkDistributionMode = mode
+        Task {
+            do {
+                try await partyService.updateDrinkDistributionMode(mode)
             } catch {
                 showError(error)
             }
@@ -161,8 +174,8 @@ final class LobbyViewModel {
         isLoading = false
     }
 
-    func leaveParty() {
-        partyService.leaveParty()
+    func leaveParty() async {
+        await partyService.leaveParty()
     }
 
     private func showError(_ error: Error) {

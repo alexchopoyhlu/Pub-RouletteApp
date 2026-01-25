@@ -14,6 +14,11 @@ enum TeamAssignmentMode: String, Codable {
     case mixed
 }
 
+enum DrinkDistributionMode: String, Codable {
+    case random      // Drinks can repeat or not appear
+    case oneOfEach   // All selected drinks will appear (cycles if more pubs than drinks)
+}
+
 struct WheelState: Codable, Equatable {
     var rotation: Double
     var isSpinning: Bool
@@ -42,6 +47,7 @@ struct Party: Codable, Identifiable {
     var searchLongitude: Double?
     var customPubs: [Pub]
     var teamAssignmentMode: TeamAssignmentMode
+    var drinkDistributionMode: DrinkDistributionMode
     var wheelState: WheelState
     var selectedDrinkTypes: [String]
     let createdAt: Date
@@ -60,6 +66,7 @@ struct Party: Codable, Identifiable {
         searchLongitude: Double? = nil,
         customPubs: [Pub] = [],
         teamAssignmentMode: TeamAssignmentMode = .mixed,
+        drinkDistributionMode: DrinkDistributionMode = .random,
         wheelState: WheelState = WheelState(),
         selectedDrinkTypes: [String] = Constants.defaultSelectedDrinkTypes,
         createdAt: Date = Date(),
@@ -77,6 +84,7 @@ struct Party: Codable, Identifiable {
         self.searchLongitude = searchLongitude
         self.customPubs = customPubs
         self.teamAssignmentMode = teamAssignmentMode
+        self.drinkDistributionMode = drinkDistributionMode
         self.wheelState = wheelState
         self.selectedDrinkTypes = selectedDrinkTypes
         self.createdAt = createdAt

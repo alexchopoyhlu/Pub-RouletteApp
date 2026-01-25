@@ -143,7 +143,9 @@ struct ResultsView: View {
     private var newGameButton: some View {
         Button {
             Haptics.medium()
-            partyService.leaveParty()
+            Task {
+                await partyService.leaveParty()
+            }
         } label: {
             Text("New Game")
                 .font(.bricolage(.body))

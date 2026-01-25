@@ -1,28 +1,22 @@
 import Foundation
 import SwiftUI
-import UIKit
 
 @Observable
 final class DrinkRevealViewModel {
     private let partyService = PartyService.shared
 
     var slotOffsets: [CGFloat] = []
-    var slotSpeeds: [CGFloat] = []  // Current speed of each slot
-    var slotSpinning: [Bool] = []   // Whether each slot is currently spinning
+    var slotPhases: [SlotPhase] = []  // Track phase of each slot
     var isSpinning: Bool = false
     var revealedCount: Int = 0
     var allRevealed: Bool = false
 
-    private var displayLink: CADisplayLink?
-    private var lastTimestamp: CFTimeInterval = 0
-    private var slotStates: [SlotState] = []
-
     private let itemHeight: CGFloat = 60
 
-    enum SlotState {
-        case spinning(speed: CGFloat)
-        case slowingDown(startSpeed: CGFloat, startTime: CFTimeInterval, duration: CGFloat)
-        case stopped
+    enum SlotPhase {
+        case idle
+        case spinning
+        case stopping
         case revealed
     }
 
@@ -51,158 +45,91 @@ final class DrinkRevealViewModel {
 
     init() {
         slotOffsets = Array(repeating: 0, count: 10)
-        slotSpeeds = Array(repeating: 0, count: 10)
-        slotSpinning = Array(repeating: false, count: 10)
-        slotStates = Array(repeating: .stopped, count: 10)
-    }
-
-    deinit {
-        stopDisplayLink()
+        slotPhases = Array(repeating: .idle, count: 10)
     }
 
     func startSlotAnimation() async {
+        // Wait for data to be available (up to 5 seconds)
+        var attempts = 0
+        while drinks.isEmpty && attempts < 50 {
+            try? await Task.sleep(for: .milliseconds(100))
+            attempts += 1
+        }
+
         guard drinks.count > 0 else { return }
 
         isSpinning = true
         let drinkCount = drinks.count
-
-        // Initialize all slots to spin at slightly different speeds
-        for i in 0..<drinkCount {
-            let baseSpeed: CGFloat = 800 + CGFloat(i) * 50  // pixels per second
-            slotStates[i] = .spinning(speed: baseSpeed)
-            slotSpinning[i] = true
-            slotOffsets[i] = CGFloat.random(in: 0...100)  // Random starting positions
-        }
-
-        // Start the display link for smooth animation
-        await MainActor.run {
-            startDisplayLink()
-        }
-
-        // Initial spin phase - all slots spin together
-        try? await Task.sleep(for: .seconds(1.5))
-
-        // Begin cascading slowdown
-        for i in 0..<drinkCount {
-            let slowdownDuration: CGFloat = 1.2 + CGFloat(i) * 0.1  // Later slots take slightly longer
-
-            if case .spinning(let speed) = slotStates[i] {
-                slotStates[i] = .slowingDown(
-                    startSpeed: speed,
-                    startTime: CACurrentMediaTime(),
-                    duration: slowdownDuration
-                )
-            }
-
-            // Wait for this slot to stop before starting next slot's slowdown
-            try? await Task.sleep(for: .seconds(Double(slowdownDuration) + 0.3))
-        }
-    }
-
-    private func startDisplayLink() {
-        displayLink = CADisplayLink(target: self, selector: #selector(updateAnimation))
-        displayLink?.add(to: .main, forMode: .common)
-        lastTimestamp = CACurrentMediaTime()
-    }
-
-    private func stopDisplayLink() {
-        displayLink?.invalidate()
-        displayLink = nil
-    }
-
-    @objc private func updateAnimation(_ displayLink: CADisplayLink) {
-        let currentTime = CACurrentMediaTime()
-        let deltaTime = currentTime - lastTimestamp
-        lastTimestamp = currentTime
-
         let totalHeight = itemHeight * CGFloat(Constants.drinkTypes.count)
-        var allStopped = true
 
-        for i in 0..<drinks.count {
-            switch slotStates[i] {
-            case .spinning(let speed):
-                // Continuous spinning
-                slotOffsets[i] += speed * CGFloat(deltaTime)
-                slotOffsets[i] = slotOffsets[i].truncatingRemainder(dividingBy: totalHeight * 5)
-                allStopped = false
+        // Phase 1: Start all slots spinning simultaneously
+        for i in 0..<drinkCount {
+            slotPhases[i] = .spinning
+            // Each slot spins a different amount (more for later slots)
+            let spinDistance = totalHeight * CGFloat(4 + i)
 
-            case .slowingDown(let startSpeed, let startTime, let duration):
-                let elapsed = CGFloat(currentTime - startTime)
-                let progress = min(elapsed / duration, 1.0)
-
-                // Easing function for natural slowdown (ease out cubic)
-                let easedProgress = 1 - pow(1 - progress, 3)
-
-                // Calculate current speed (decreasing)
-                let currentSpeed = startSpeed * (1 - easedProgress)
-
-                // Update position
-                slotOffsets[i] += currentSpeed * CGFloat(deltaTime)
-
-                // Dynamic blur based on speed
-                slotSpinning[i] = currentSpeed > 100
-
-                if progress >= 1.0 {
-                    // Snap to target drink position
-                    snapToTarget(slotIndex: i)
-                    slotStates[i] = .stopped
-                    slotSpinning[i] = false
-                    Haptics.medium()
-
-                    // Short delay then reveal
-                    Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(200))
-                        self.revealSlot(at: i)
-                    }
-                } else {
-                    allStopped = false
-                }
-
-            case .stopped:
-                // Waiting to be revealed
-                break
-
-            case .revealed:
-                // Already revealed
-                break
+            withAnimation(.linear(duration: 0.5)) {
+                slotOffsets[i] = spinDistance * 0.3
             }
         }
 
-        if allStopped && revealedCount >= drinks.count {
-            stopDisplayLink()
+        // Continue spinning while we wait
+        try? await Task.sleep(for: .milliseconds(400))
+
+        // Extend the spin for all slots
+        for i in 0..<drinkCount {
+            let spinDistance = totalHeight * CGFloat(4 + i)
+            withAnimation(.linear(duration: 0.8)) {
+                slotOffsets[i] = spinDistance * 0.7
+            }
+        }
+
+        try? await Task.sleep(for: .milliseconds(600))
+
+        // Phase 2: Cascade the stopping - one slot at a time
+        for i in 0..<drinkCount {
+            await stopSlot(at: i)
+            // Small delay before next slot starts stopping
+            try? await Task.sleep(for: .milliseconds(150))
         }
     }
 
-    private func snapToTarget(slotIndex: Int) {
-        guard slotIndex < drinks.count else { return }
+    private func stopSlot(at index: Int) async {
+        guard index < drinks.count else { return }
 
-        let targetDrink = drinks[slotIndex]
-        let targetIndex = Constants.drinkTypes.firstIndex(of: targetDrink) ?? 0
+        slotPhases[index] = .stopping
+
+        let targetDrink = drinks[index]
+        let targetDrinkIndex = Constants.drinkTypes.firstIndex(of: targetDrink) ?? 0
         let totalHeight = itemHeight * CGFloat(Constants.drinkTypes.count)
 
-        // Calculate current position in the cycle
-        let currentPos = slotOffsets[slotIndex].truncatingRemainder(dividingBy: totalHeight)
+        // Calculate final position that lands on target drink
+        // Add extra rotations for visual effect, then land on target
+        let extraRotations = totalHeight * CGFloat(2 + index)
+        let targetOffset = CGFloat(targetDrinkIndex) * itemHeight
+        let finalOffset = extraRotations + targetOffset
 
-        // Calculate target position
-        let targetPos = CGFloat(targetIndex) * itemHeight
-
-        // Find the nearest snap point
-        var adjustment = targetPos - currentPos
-        if adjustment < -totalHeight / 2 {
-            adjustment += totalHeight
-        } else if adjustment > totalHeight / 2 {
-            adjustment -= totalHeight
+        // Slow down and stop with easing
+        withAnimation(.easeOut(duration: 0.8 + Double(index) * 0.1)) {
+            slotOffsets[index] = finalOffset
         }
 
-        // Animate to snap position
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-            slotOffsets[slotIndex] += adjustment
-        }
-    }
+        // Wait for animation to mostly complete
+        try? await Task.sleep(for: .milliseconds(700 + index * 80))
 
-    private func revealSlot(at index: Int) {
+        // Snap with spring for satisfying stop
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+            // Normalize to exact position
+            slotOffsets[index] = targetOffset
+        }
+
+        Haptics.medium()
+
+        try? await Task.sleep(for: .milliseconds(200))
+
+        // Reveal
         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            slotStates[index] = .revealed
+            slotPhases[index] = .revealed
             revealedCount = max(revealedCount, index + 1)
         }
 
@@ -210,7 +137,6 @@ final class DrinkRevealViewModel {
             Haptics.success()
             allRevealed = true
             isSpinning = false
-            stopDisplayLink()
         }
     }
 

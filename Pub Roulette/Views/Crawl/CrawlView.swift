@@ -37,8 +37,10 @@ struct CrawlView: View {
             Button("Cancel", role: .cancel) {}
             Button("Leave", role: .destructive) {
                 Haptics.warning()
-                partyService.leaveParty()
-                dismiss()
+                Task {
+                    await partyService.leaveParty()
+                    dismiss()
+                }
             }
         } message: {
             Text("Are you sure you want to leave the pub crawl? You won't be able to rejoin.")

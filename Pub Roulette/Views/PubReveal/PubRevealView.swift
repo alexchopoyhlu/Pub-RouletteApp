@@ -25,7 +25,8 @@ struct PubRevealView: View {
                                 isRevealed: viewModel.revealedIndices.contains(index),
                                 isFinal: index == viewModel.orderedPubs.count - 1
                             )
-                            .offset(viewModel.shuffleOffsets[safe: index] ?? .zero)
+                            .offset(y: viewModel.cardOffsets[safe: index] ?? 0)
+                            .zIndex(viewModel.cardZIndices[safe: index] ?? 0)
                         }
                     }
                     .padding()

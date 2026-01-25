@@ -44,7 +44,7 @@ struct PlayerWheelView: View {
 
                     Text("All players assigned!")
                         .font(.bricolage(.headline))
-                        .foregroundStyle(.green)
+                        .foregroundStyle(.white)
                         .rotationEffect(.degrees(-rotation))
                 } else {
                     // Wheel segments

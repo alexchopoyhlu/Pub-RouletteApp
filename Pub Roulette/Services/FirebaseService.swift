@@ -73,6 +73,17 @@ final class FirebaseService {
         }
     }
 
+    func removePlayer(from partyCode: String, playerId: String) async throws {
+        let party = try await getParty(code: partyCode)
+        guard var players = party?.players else { return }
+
+        players.removeAll { $0.id == playerId }
+        let playersData = players.map { encodePlayer($0) }
+        try await db.collection("parties").document(partyCode).updateData([
+            "players": playersData
+        ])
+    }
+
     func setTeams(for partyCode: String, teams: [Team]) async throws {
         let teamsData = teams.map { encodeTeam($0) }
         try await db.collection("parties").document(partyCode).updateData([
@@ -174,7 +185,8 @@ final class FirebaseService {
             "senderId": message.senderId,
             "senderName": message.senderName,
             "text": message.text,
-            "timestamp": Timestamp(date: message.timestamp)
+            "timestamp": Timestamp(date: message.timestamp),
+            "isSystemMessage": message.isSystemMessage
         ]
         if let teamId = message.teamId {
             data["teamId"] = teamId
@@ -196,7 +208,8 @@ final class FirebaseService {
             senderName: senderName,
             teamId: data["teamId"] as? String,
             text: text,
-            timestamp: timestampValue.dateValue()
+            timestamp: timestampValue.dateValue(),
+            isSystemMessage: data["isSystemMessage"] as? Bool ?? false
         )
     }
 
@@ -208,6 +221,7 @@ final class FirebaseService {
             "pubCount": party.pubCount,
             "searchRadius": party.searchRadius,
             "teamAssignmentMode": party.teamAssignmentMode.rawValue,
+            "drinkDistributionMode": party.drinkDistributionMode.rawValue,
             "wheelState": encodeWheelState(party.wheelState),
             "selectedDrinkTypes": party.selectedDrinkTypes,
             "createdAt": Timestamp(date: party.createdAt),
@@ -254,6 +268,9 @@ final class FirebaseService {
         let teamAssignmentModeString = data["teamAssignmentMode"] as? String ?? "mixed"
         let teamAssignmentMode = TeamAssignmentMode(rawValue: teamAssignmentModeString) ?? .mixed
 
+        let drinkDistributionModeString = data["drinkDistributionMode"] as? String ?? "random"
+        let drinkDistributionMode = DrinkDistributionMode(rawValue: drinkDistributionModeString) ?? .random
+
         let wheelStateData = data["wheelState"] as? [String: Any]
         let wheelState = wheelStateData.flatMap { decodeWheelState(from: $0) } ?? WheelState()
 
@@ -271,6 +288,7 @@ final class FirebaseService {
             searchLongitude: searchLongitude,
             customPubs: customPubs,
             teamAssignmentMode: teamAssignmentMode,
+            drinkDistributionMode: drinkDistributionMode,
             wheelState: wheelState,
             selectedDrinkTypes: selectedDrinkTypes,
             createdAt: createdAtTimestamp.dateValue(),
@@ -414,6 +432,12 @@ final class FirebaseService {
     func updateTeamAssignmentMode(code: String, mode: TeamAssignmentMode) async throws {
         try await db.collection("parties").document(code).updateData([
             "teamAssignmentMode": mode.rawValue
+        ])
+    }
+
+    func updateDrinkDistributionMode(code: String, mode: DrinkDistributionMode) async throws {
+        try await db.collection("parties").document(code).updateData([
+            "drinkDistributionMode": mode.rawValue
         ])
     }
 

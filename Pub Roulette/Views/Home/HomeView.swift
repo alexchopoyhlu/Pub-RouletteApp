@@ -89,7 +89,6 @@ struct HomeView: View {
             .navigationDestination(isPresented: $navigateToLobby) {
                 LobbyView()
             }
-            .animation(.easeInOut(duration: 0.3), value: navigateToLobby)
             .sheet(isPresented: $showJoinSheet) {
                 JoinPartySheet(
                     playerName: playerName,
@@ -112,7 +111,13 @@ struct HomeView: View {
         do {
             _ = try await partyService.createParty(hostName: playerName.trimmingCharacters(in: .whitespaces))
             Haptics.success()
-            navigateToLobby = true
+
+            // Small delay for visual feedback before transition
+            try? await Task.sleep(for: .milliseconds(150))
+
+            withAnimation(.easeInOut(duration: 0.35)) {
+                navigateToLobby = true
+            }
         } catch {
             Haptics.error()
             errorMessage = error.localizedDescription
@@ -129,8 +134,15 @@ struct HomeView: View {
                 playerName: playerName.trimmingCharacters(in: .whitespaces)
             )
             Haptics.success()
+
+            // Dismiss sheet first and wait for it to animate away
             showJoinSheet = false
-            navigateToLobby = true
+            try? await Task.sleep(for: .milliseconds(400))
+
+            // Then navigate to lobby with smooth transition
+            withAnimation(.easeInOut(duration: 0.35)) {
+                navigateToLobby = true
+            }
         } catch {
             Haptics.error()
             errorMessage = error.localizedDescription

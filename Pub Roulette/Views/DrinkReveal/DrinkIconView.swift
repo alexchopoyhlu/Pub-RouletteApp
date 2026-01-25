@@ -32,44 +32,29 @@ struct DrinkSlotView: View {
     let drinks: [String]
     let targetDrink: String
     let offset: CGFloat
-    let isRevealed: Bool
     let isSpinning: Bool
 
     private let itemHeight: CGFloat = 60
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                if isRevealed {
-                    DrinkIconView(drinkType: targetDrink, size: 50)
-                        .transition(.scale.combined(with: .opacity))
-                } else {
-                    // Create a seamless looping column of drinks
-                    let totalHeight = itemHeight * CGFloat(drinks.count)
-                    let normalizedOffset = offset.truncatingRemainder(dividingBy: totalHeight)
+            let totalHeight = itemHeight * CGFloat(drinks.count)
+            let normalizedOffset = offset.truncatingRemainder(dividingBy: totalHeight)
 
-                    VStack(spacing: 0) {
-                        // Repeat drinks 5 times for seamless looping
-                        ForEach(0..<5, id: \.self) { repetition in
-                            ForEach(Array(drinks.enumerated()), id: \.offset) { index, drink in
-                                DrinkIconView(drinkType: drink, size: 50)
-                                    .frame(height: itemHeight)
-                            }
-                        }
+            VStack(spacing: 0) {
+                // Repeat drinks 3 times for seamless looping (reduced from 5)
+                ForEach(0..<3, id: \.self) { _ in
+                    ForEach(Array(drinks.enumerated()), id: \.offset) { _, drink in
+                        DrinkIconView(drinkType: drink, size: 50)
+                            .frame(height: itemHeight)
                     }
-                    .offset(y: -normalizedOffset - totalHeight * 2 + geometry.size.height / 2 - itemHeight / 2)
-                    .blur(radius: blurAmount)
                 }
             }
+            .offset(y: -normalizedOffset - totalHeight + geometry.size.height / 2 - itemHeight / 2)
+            .blur(radius: isSpinning ? 1 : 0)
             .frame(width: geometry.size.width, height: geometry.size.height)
             .clipped()
         }
-    }
-
-    private var blurAmount: CGFloat {
-        // Blur based on apparent speed (change in offset would indicate speed)
-        // For now, blur when spinning
-        isSpinning ? 1.5 : 0
     }
 }
 
@@ -93,7 +78,6 @@ struct DrinkSlotView: View {
             drinks: Constants.drinkTypes,
             targetDrink: "Beer",
             offset: 0,
-            isRevealed: false,
             isSpinning: false
         )
         .frame(height: 80)

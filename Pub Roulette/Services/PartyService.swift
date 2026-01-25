@@ -84,6 +84,11 @@ final class PartyService {
         try await firebaseService.updateTeamAssignmentMode(code: code, mode: mode)
     }
 
+    func updateDrinkDistributionMode(_ mode: DrinkDistributionMode) async throws {
+        guard let code = currentParty?.code, isHost else { return }
+        try await firebaseService.updateDrinkDistributionMode(code: code, mode: mode)
+    }
+
     func updateWheelState(_ state: WheelState) async throws {
         guard let code = currentParty?.code else { return }
         try await firebaseService.updateWheelState(code: code, wheelState: state)
@@ -184,8 +189,25 @@ final class PartyService {
             pubIndices.append(finalPubIndex)
             updatedTeams[i].pubOrder = pubIndices
 
-            updatedTeams[i].drinkOrder = (0..<pubCount).map { _ in
-                availableDrinks.randomElement() ?? "Beer"
+            // Assign drinks based on distribution mode
+            switch party.drinkDistributionMode {
+            case .random:
+                // Random: drinks can repeat or not appear
+                updatedTeams[i].drinkOrder = (0..<pubCount).map { _ in
+                    availableDrinks.randomElement() ?? "Beer"
+                }
+            case .oneOfEach:
+                // One of each: cycle through all selected drinks, ensuring each appears
+                var shuffledDrinks = availableDrinks.shuffled()
+                var drinkOrder: [String] = []
+                for j in 0..<pubCount {
+                    // Cycle through drinks, reshuffling when we've used them all
+                    if j % availableDrinks.count == 0 && j > 0 {
+                        shuffledDrinks = availableDrinks.shuffled()
+                    }
+                    drinkOrder.append(shuffledDrinks[j % availableDrinks.count])
+                }
+                updatedTeams[i].drinkOrder = drinkOrder
             }
         }
 
@@ -223,8 +245,21 @@ final class PartyService {
         if allSubmitted {
             team.currentPubIndex = pubIndex + 1
 
+            // Get pub name for the system message
+            let pubOrderIndex = team.pubOrder[safe: pubIndex]
+            let pubName = pubOrderIndex.flatMap { party.pubs[safe: $0]?.name } ?? "Pub \(pubIndex + 1)"
+
             if team.currentPubIndex >= team.pubOrder.count {
                 team.finishTime = Date()
+                // Team finished all pubs!
+                Task {
+                    await sendSystemMessage("\(team.name) has finished the crawl! 🎉", teamId: team.id)
+                }
+            } else {
+                // Team completed a pub
+                Task {
+                    await sendSystemMessage("\(team.name) completed \(pubName)", teamId: team.id)
+                }
             }
         }
 
@@ -280,6 +315,13 @@ final class PartyService {
         print("PartyService: Message sent successfully")
     }
 
+    func sendSystemMessage(_ text: String, teamId: String? = nil) async {
+        guard let party = currentParty else { return }
+
+        let message = Message.system(text, teamId: teamId)
+        try? await firebaseService.sendMessage(to: party.code, message: message)
+    }
+
     func startMessageListener() {
         print("PartyService: startMessageListener called")
         print("PartyService: currentParty?.code = \(currentParty?.code ?? "nil")")
@@ -306,7 +348,17 @@ final class PartyService {
         isMessageListenerActive = false
     }
 
-    func leaveParty() {
+    func leaveParty() async {
+        // Send system message before leaving
+        if let player = currentPlayer {
+            await sendSystemMessage("\(player.name) left the game")
+
+            // Remove player from Firebase
+            if let code = currentParty?.code {
+                try? await firebaseService.removePlayer(from: code, playerId: player.id)
+            }
+        }
+
         stopListening()
         stopMessageListener()
         currentParty = nil
