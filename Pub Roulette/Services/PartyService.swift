@@ -243,6 +243,9 @@ final class PartyService {
         let allSubmitted = teamPlayers.allSatisfy { currentSubmissions.contains($0.id) }
 
         if allSubmitted {
+            // Record pub completion time
+            let completionTime = Date()
+            team.pubCompletionTimes[pubKey] = completionTime
             team.currentPubIndex = pubIndex + 1
 
             // Get pub name for the system message
@@ -250,7 +253,7 @@ final class PartyService {
             let pubName = pubOrderIndex.flatMap { party.pubs[safe: $0]?.name } ?? "Pub \(pubIndex + 1)"
 
             if team.currentPubIndex >= team.pubOrder.count {
-                team.finishTime = Date()
+                team.finishTime = completionTime
                 // Team finished all pubs!
                 Task {
                     await sendSystemMessage("\(team.name) has finished the crawl! 🎉", teamId: team.id)
@@ -265,10 +268,9 @@ final class PartyService {
 
         try await firebaseService.updateTeam(in: party.code, team: team)
 
-        if let updatedParty = try await firebaseService.getParty(code: party.code) {
-            if updatedParty.teams.filter({ $0.finishTime != nil }).count == updatedParty.teams.count {
-                try await firebaseService.updatePartyStatus(code: party.code, status: .finished)
-            }
+        // When the first team finishes, end the game for everyone
+        if team.finishTime != nil {
+            try await firebaseService.updatePartyStatus(code: party.code, status: .finished)
         }
     }
 

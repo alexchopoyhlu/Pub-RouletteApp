@@ -1,143 +1,264 @@
 import SwiftUI
-import UIKit
 
 struct ResultsView: View {
     private let partyService = PartyService.shared
+    @State private var showConfetti = false
 
     var party: Party? {
         partyService.currentParty
     }
 
-    var rankedTeams: [Team] {
-        guard let teams = party?.teams else { return [] }
+    var winningTeam: Team? {
+        guard let teams = party?.teams else { return nil }
         return teams
             .filter { $0.finishTime != nil }
             .sorted { ($0.finishTime ?? .distantFuture) < ($1.finishTime ?? .distantFuture) }
+            .first
     }
 
     var body: some View {
-        VStack(spacing: 24) {
-            headerSection
-
-            if let winner = rankedTeams.first {
-                winnerSection(winner)
-            }
+        ZStack {
+            MeshGradientBackground(theme: .victory)
 
             ScrollView {
-                VStack(spacing: 12) {
-                    ForEach(Array(rankedTeams.enumerated()), id: \.element.id) { index, team in
-                        teamResultRow(team: team, rank: index + 1)
+                VStack(spacing: 24) {
+                    headerSection
+
+                    if let winner = winningTeam {
+                        teamBadge(winner)
+
+                        proofSection(winner)
                     }
+
+                    Spacer(minLength: 20)
+
+                    newGameButton
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.bottom, 40)
             }
 
-            loserMessageSection
-
-            newGameButton
+            if showConfetti {
+                ConfettiView()
+            }
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
-            // Celebration haptics when results appear
             Haptics.success()
+            showConfetti = true
         }
     }
 
     private var headerSection: some View {
         VStack(spacing: 8) {
-            Text("Results")
-                .font(.bricolage(.largeTitle))
+            Text("We have a")
+                .font(.bricolage(.title))
+                .foregroundStyle(.white.opacity(0.9))
 
-            Text("The crawl is complete!")
-                .font(.bricolage(.subheadline))
-                .foregroundStyle(.secondary)
+            Text("winner!")
+                .font(.bricolage(size: 48))
+                .foregroundStyle(.white)
         }
-        .padding(.top)
+        .padding(.top, 40)
     }
 
-    private func winnerSection(_ winner: Team) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: "crown.fill")
-                .font(.system(size: 50))
-                .foregroundStyle(.yellow)
+    private func teamBadge(_ team: Team) -> some View {
+        Text(team.name)
+            .font(.bricolage(.title2))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(team.color)
+            )
+    }
 
-            Text("Winner!")
-                .font(.bricolage(.title2))
+    private func proofSection(_ team: Team) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Check proof")
+                    .font(.bricolage(.headline))
+                    .foregroundStyle(.white)
 
-            Text(winner.name)
-                .font(.bricolage(.title))
-                .foregroundStyle(winner.color)
+                Image(systemName: "arrow.down.circle.fill")
+                    .foregroundStyle(.white.opacity(0.8))
+            }
+            .padding(.top, 8)
+
+            // Pub proof cards
+            VStack(spacing: 0) {
+                ForEach(Array(team.pubOrder.enumerated()), id: \.offset) { index, pubIndex in
+                    VStack(spacing: 0) {
+                        pubProofCard(team: team, pubOrderIndex: index, pubIndex: pubIndex)
+
+                        if index < team.pubOrder.count - 1 {
+                            // Arrow connector
+                            Image(systemName: "arrow.down")
+                                .font(.title2)
+                                .foregroundStyle(.white.opacity(0.5))
+                                .padding(.vertical, 12)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func pubProofCard(team: Team, pubOrderIndex: Int, pubIndex: Int) -> some View {
+        let pub = party?.pubs[safe: pubIndex]
+        let drink = team.drinkOrder[safe: pubOrderIndex] ?? "Beer"
+        let completionTime = calculateCompletionTime(team: team, pubOrderIndex: pubOrderIndex)
+        let playerSubmissions = getPlayerSubmissions(team: team, pubOrderIndex: pubOrderIndex)
+
+        return VStack(alignment: .leading, spacing: 12) {
+            // Header row with pub info and drink
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    // Pub name with time
+                    HStack(spacing: 8) {
+                        if let pubName = pub?.name {
+                            Text(pubName)
+                                .font(.bricolage(.headline))
+                                .foregroundStyle(.white)
+                        } else {
+                            Text(pubOrdinal(pubOrderIndex + 1) + " Pub")
+                                .font(.bricolage(.headline))
+                                .foregroundStyle(.white)
+                        }
+
+                        if let time = completionTime {
+                            Text("- \(time)")
+                                .font(.bricolage(.subheadline))
+                                .foregroundStyle(.white.opacity(0.7))
+                        }
+                    }
+                }
+
+                Spacer()
+
+                // Drink badge
+                drinkBadge(drink: drink)
+            }
+
+            // Player proof cards
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(playerSubmissions, id: \.id) { player in
+                        playerProofCard(player: player)
+                    }
+                }
+            }
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(winner.color.opacity(0.1))
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
         )
-        .padding(.horizontal)
     }
 
-    private func teamResultRow(team: Team, rank: Int) -> some View {
-        HStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(rankColor(rank))
-                    .frame(width: 40, height: 40)
-
-                Text("\(rank)")
-                    .font(.bricolage(.headline))
-                    .foregroundStyle(.white)
-            }
-
-            Circle()
-                .fill(team.color)
-                .frame(width: 16, height: 16)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(team.name)
-                    .font(.bricolage(.headline))
-
-                if let finishTime = team.finishTime {
-                    Text("Finished \(finishTime.formatted(date: .omitted, time: .shortened))")
-                        .font(.bricolage(.caption))
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer()
-
-            if rank == 1 {
-                Image(systemName: "trophy.fill")
-                    .foregroundStyle(.yellow)
-            }
-        }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-
-    private func rankColor(_ rank: Int) -> Color {
-        switch rank {
-        case 1: return .yellow
-        case 2: return .gray
-        case 3: return .brown
-        default: return Color(.systemGray3)
-        }
-    }
-
-    private var loserMessageSection: some View {
-        VStack(spacing: 8) {
-            Text("Losing teams owe the winners a shot!")
-                .font(.bricolage(.headline))
-                .multilineTextAlignment(.center)
-
-            Text("Pay up at the nearest bar")
+    private func drinkBadge(drink: String) -> some View {
+        HStack(spacing: 4) {
+            Text(Constants.drinkEmojis[drink] ?? "🍺")
+            Text(drink)
                 .font(.bricolage(.caption))
-                .foregroundStyle(.secondary)
         }
-        .padding()
-        .background(Color.orange.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(drinkBadgeColor(drink))
+        .foregroundStyle(.white)
+        .clipShape(Capsule())
+    }
+
+    private func drinkBadgeColor(_ drink: String) -> Color {
+        switch drink {
+        case "Wine": return .purple
+        case "Cocktail": return .pink
+        case "Shot": return .orange
+        case "Spirits": return .teal
+        case "Cider": return .green
+        case "Sparkling": return Color(red: 1.0, green: 0.7, blue: 0.0)
+        case "No-Alcohol": return .blue
+        default: return Color(red: 0.77, green: 0.6, blue: 0.13) // Beer gold
+        }
+    }
+
+    private func playerProofCard(player: Player) -> some View {
+        VStack(spacing: 8) {
+            // Photo placeholder - showing a camera icon since photos aren't stored
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.2))
+                .frame(width: 70, height: 70)
+                .overlay(
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title)
+                        .foregroundStyle(.green)
+                )
+
+            Text(player.name)
+                .font(.bricolage(.caption))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+        }
+        .frame(width: 80)
+    }
+
+    private func calculateCompletionTime(team: Team, pubOrderIndex: Int) -> String? {
+        guard let party = party else { return nil }
+
+        let pubKey = String(pubOrderIndex)
+        guard let completionTime = team.pubCompletionTimes[pubKey] else { return nil }
+
+        let startTime: Date
+        if pubOrderIndex == 0 {
+            // For first pub, calculate from party start (when status became active)
+            // We use createdAt as approximation since we don't have exact active time
+            startTime = party.createdAt
+        } else {
+            // From previous pub completion
+            let previousPubKey = String(pubOrderIndex - 1)
+            startTime = team.pubCompletionTimes[previousPubKey] ?? party.createdAt
+        }
+
+        let duration = completionTime.timeIntervalSince(startTime)
+        return formatDuration(duration)
+    }
+
+    private func formatDuration(_ interval: TimeInterval) -> String {
+        let minutes = Int(interval) / 60
+        let seconds = Int(interval) % 60
+
+        if minutes >= 60 {
+            let hours = minutes / 60
+            let remainingMinutes = minutes % 60
+            return "\(hours)h \(remainingMinutes)m"
+        } else if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        } else {
+            return "\(seconds)s"
+        }
+    }
+
+    private func getPlayerSubmissions(team: Team, pubOrderIndex: Int) -> [Player] {
+        guard let party = party else { return [] }
+
+        let pubKey = String(pubOrderIndex)
+        let playerIds = team.submissions[pubKey] ?? []
+
+        return playerIds.compactMap { playerId in
+            party.players.first { $0.id == playerId }
+        }
+    }
+
+    private func pubOrdinal(_ number: Int) -> String {
+        let suffix: String
+        switch number {
+        case 1: suffix = "st"
+        case 2: suffix = "nd"
+        case 3: suffix = "rd"
+        default: suffix = "th"
+        }
+        return "\(number)\(suffix)"
     }
 
     private var newGameButton: some View {
@@ -148,14 +269,14 @@ struct ResultsView: View {
             }
         } label: {
             Text("New Game")
-                .font(.bricolage(.body))
+                .font(.bricolage(.headline))
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(Color.white.opacity(0.2))
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .padding()
+        .padding(.horizontal)
     }
 }
 

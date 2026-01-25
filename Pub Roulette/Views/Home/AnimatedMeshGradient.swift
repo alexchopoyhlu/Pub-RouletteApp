@@ -6,6 +6,7 @@ enum MeshGradientTheme {
     case aurora // green, teal, cyan for team assignment
     case amber // warm amber, gold, brown for pub reveal
     case monochrome // black, gray, white for settings
+    case victory // golden, celebratory for winner screen
 
     var colors: [[Color]] {
         switch self {
@@ -43,6 +44,14 @@ enum MeshGradientTheme {
                 [Color(white: 0.15), Color(white: 0.3), Color(white: 0.35), Color(white: 0.15)],
                 [Color(white: 0.2), Color(white: 0.4), Color(white: 0.35), Color(white: 0.2)],
                 [.black, Color(white: 0.15), Color(white: 0.15), .black]
+            ]
+        case .victory:
+            // Golden celebration theme
+            return [
+                [Color(red: 0.2, green: 0.15, blue: 0.05), Color(red: 0.3, green: 0.2, blue: 0.05), Color(red: 0.3, green: 0.2, blue: 0.05), Color(red: 0.2, green: 0.15, blue: 0.05)],
+                [Color(red: 0.4, green: 0.3, blue: 0.0), Color(red: 0.95, green: 0.75, blue: 0.2), Color(red: 1.0, green: 0.85, blue: 0.3), Color(red: 0.4, green: 0.3, blue: 0.0)],
+                [Color(red: 0.5, green: 0.35, blue: 0.05), Color(red: 0.85, green: 0.65, blue: 0.15), Color(red: 0.9, green: 0.7, blue: 0.2), Color(red: 0.5, green: 0.35, blue: 0.05)],
+                [Color(red: 0.15, green: 0.1, blue: 0.02), Color(red: 0.25, green: 0.18, blue: 0.05), Color(red: 0.25, green: 0.18, blue: 0.05), Color(red: 0.15, green: 0.1, blue: 0.02)]
             ]
         }
     }
@@ -107,6 +116,7 @@ struct AnimatedMeshGradientFallback: View {
         case .aurora: return Color(red: 0.0, green: 0.15, blue: 0.15)
         case .amber: return Color(red: 0.15, green: 0.08, blue: 0.0)
         case .monochrome: return .black
+        case .victory: return Color(red: 0.2, green: 0.15, blue: 0.05)
         }
     }
 
@@ -117,6 +127,7 @@ struct AnimatedMeshGradientFallback: View {
         case .aurora: return [.teal, .cyan, .green, Color(red: 0.0, green: 0.5, blue: 0.4)]
         case .amber: return [Color(red: 0.8, green: 0.5, blue: 0.1), Color(red: 0.9, green: 0.6, blue: 0.2), Color(red: 0.7, green: 0.4, blue: 0.1), Color(red: 0.6, green: 0.35, blue: 0.1)]
         case .monochrome: return [Color(white: 0.3), Color(white: 0.4), Color(white: 0.35), Color(white: 0.25)]
+        case .victory: return [Color(red: 0.95, green: 0.75, blue: 0.2), Color(red: 1.0, green: 0.85, blue: 0.3), Color(red: 0.85, green: 0.65, blue: 0.15), Color(red: 0.9, green: 0.7, blue: 0.2)]
         }
     }
 
@@ -195,4 +206,8 @@ struct MeshGradientBackground: View {
 
 #Preview("Monochrome") {
     MeshGradientBackground(theme: .monochrome)
+}
+
+#Preview("Victory") {
+    MeshGradientBackground(theme: .victory)
 }

@@ -10,6 +10,7 @@ struct Team: Codable, Identifiable, Equatable {
     var currentPubIndex: Int
     var finishTime: Date?
     var submissions: [String: [String]]
+    var pubCompletionTimes: [String: Date] // Tracks when each pub was completed (key is pub index as string)
 
     init(
         id: String = UUID().uuidString,
@@ -19,7 +20,8 @@ struct Team: Codable, Identifiable, Equatable {
         drinkOrder: [String] = [],
         currentPubIndex: Int = 0,
         finishTime: Date? = nil,
-        submissions: [String: [String]] = [:]
+        submissions: [String: [String]] = [:],
+        pubCompletionTimes: [String: Date] = [:]
     ) {
         self.id = id
         self.name = name
@@ -29,6 +31,7 @@ struct Team: Codable, Identifiable, Equatable {
         self.currentPubIndex = currentPubIndex
         self.finishTime = finishTime
         self.submissions = submissions
+        self.pubCompletionTimes = pubCompletionTimes
     }
 
     func submissionCount(for pubIndex: Int) -> Int {
