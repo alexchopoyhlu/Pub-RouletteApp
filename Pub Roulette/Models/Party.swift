@@ -36,6 +36,7 @@ struct Party: Codable, Identifiable {
     let hostId: String
     var status: PartyStatus
     var teamCount: Int
+    var pubCount: Int
     var searchRadius: Int
     var searchLatitude: Double?
     var searchLongitude: Double?
@@ -53,13 +54,14 @@ struct Party: Codable, Identifiable {
         hostId: String,
         status: PartyStatus = .lobby,
         teamCount: Int = 2,
+        pubCount: Int = Constants.defaultPubCount,
         searchRadius: Int = 1000,
         searchLatitude: Double? = nil,
         searchLongitude: Double? = nil,
         customPubs: [Pub] = [],
         teamAssignmentMode: TeamAssignmentMode = .mixed,
         wheelState: WheelState = WheelState(),
-        selectedDrinkTypes: [String] = Constants.drinkTypes,
+        selectedDrinkTypes: [String] = Constants.defaultSelectedDrinkTypes,
         createdAt: Date = Date(),
         players: [Player] = [],
         teams: [Team] = [],
@@ -69,6 +71,7 @@ struct Party: Codable, Identifiable {
         self.hostId = hostId
         self.status = status
         self.teamCount = teamCount
+        self.pubCount = pubCount
         self.searchRadius = searchRadius
         self.searchLatitude = searchLatitude
         self.searchLongitude = searchLongitude

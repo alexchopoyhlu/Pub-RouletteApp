@@ -8,11 +8,12 @@ final class LobbyViewModel {
     private let locationService = LocationService.shared
 
     var teamCount: Int = 2
+    var pubCount: Int = Constants.defaultPubCount
     var searchRadius: Int = 1000
     var searchLatitude: Double?
     var searchLongitude: Double?
     var teamAssignmentMode: TeamAssignmentMode = .mixed
-    var selectedDrinkTypes: Set<String> = Set(Constants.drinkTypes)
+    var selectedDrinkTypes: Set<String> = Set(Constants.defaultSelectedDrinkTypes)
     var isLoading: Bool = false
     var errorMessage: String?
     var showError: Bool = false
@@ -51,6 +52,7 @@ final class LobbyViewModel {
     init() {
         if let party = partyService.currentParty {
             teamCount = party.teamCount
+            pubCount = party.pubCount
             searchRadius = party.searchRadius
             searchLatitude = party.searchLatitude
             searchLongitude = party.searchLongitude
@@ -94,6 +96,7 @@ final class LobbyViewModel {
         do {
             try await partyService.updateSettings(
                 teamCount: teamCount,
+                pubCount: pubCount,
                 searchRadius: searchRadius,
                 searchLatitude: searchLatitude,
                 searchLongitude: searchLongitude

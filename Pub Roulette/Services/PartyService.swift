@@ -74,9 +74,9 @@ final class PartyService {
         return party
     }
 
-    func updateSettings(teamCount: Int, searchRadius: Int, searchLatitude: Double? = nil, searchLongitude: Double? = nil) async throws {
+    func updateSettings(teamCount: Int, pubCount: Int, searchRadius: Int, searchLatitude: Double? = nil, searchLongitude: Double? = nil) async throws {
         guard let code = currentParty?.code, isHost else { return }
-        try await firebaseService.updatePartySettings(code: code, teamCount: teamCount, searchRadius: searchRadius, searchLatitude: searchLatitude, searchLongitude: searchLongitude)
+        try await firebaseService.updatePartySettings(code: code, teamCount: teamCount, pubCount: pubCount, searchRadius: searchRadius, searchLatitude: searchLatitude, searchLongitude: searchLongitude)
     }
 
     func updateTeamAssignmentMode(_ mode: TeamAssignmentMode) async throws {
@@ -120,11 +120,11 @@ final class PartyService {
             }
         }
 
-        guard allPubs.count >= party.teamCount else {
+        guard allPubs.count >= party.pubCount else {
             throw PartyError.notEnoughPubs
         }
 
-        let selectedPubs = Array(allPubs.shuffled().prefix(party.teamCount + 2))
+        let selectedPubs = Array(allPubs.shuffled().prefix(party.pubCount))
         try await firebaseService.setPubs(for: party.code, pubs: selectedPubs)
 
         let teams = createTeams(count: party.teamCount)

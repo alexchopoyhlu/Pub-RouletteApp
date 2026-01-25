@@ -75,6 +75,12 @@ enum Constants {
     static let minTeamCount: Int = 2
     static let maxTeamCount: Int = 8
 
+    static let minPubCount: Int = 3
+    static let maxPubCount: Int = 10
+    static let defaultPubCount: Int = 5
+
+    static let defaultSelectedDrinkTypes: [String] = ["Shot", "Wine", "Beer", "Cocktail"]
+
     static let wheelSpinDuration: Double = 3.0
     static let cardFlipDuration: Double = 0.6
     static let slotSpinDuration: Double = 2.0

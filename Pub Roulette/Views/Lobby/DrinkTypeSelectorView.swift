@@ -10,9 +10,10 @@ struct DrinkTypeSelectorView: View {
     private let row3 = ["Cider", "Sparkling", "No-Alcohol"]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Drink Types")
                 .font(.bricolage(.headline))
+                .foregroundStyle(.white)
 
             VStack(spacing: 8) {
                 // Row 1 - 3 items
@@ -25,12 +26,12 @@ struct DrinkTypeSelectorView: View {
                 // Row 2 - 2 items, offset for stretcher bond
                 HStack(spacing: 8) {
                     Spacer()
-                        .frame(width: 20)
+                        .frame(width: 30)
                     ForEach(row2, id: \.self) { drink in
                         drinkChip(for: drink)
                     }
                     Spacer()
-                        .frame(width: 20)
+                        .frame(width: 30)
                 }
 
                 // Row 3 - 3 items
@@ -43,16 +44,13 @@ struct DrinkTypeSelectorView: View {
 
             Text("\(selectedDrinkTypes.count) drink type\(selectedDrinkTypes.count == 1 ? "" : "s") selected")
                 .font(.bricolage(.caption))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.6))
         }
         .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
+                .fill(.ultraThinMaterial)
         )
     }
 
@@ -62,6 +60,7 @@ struct DrinkTypeSelectorView: View {
         let emoji = Constants.drinkEmojis[drink] ?? ""
         let colorHex = Constants.drinkColors[drink] ?? "#808080"
         let color = Color(hex: colorHex) ?? .gray
+        let lighterColor = color.opacity(0.7)
 
         Button {
             Haptics.selection()
@@ -76,14 +75,14 @@ struct DrinkTypeSelectorView: View {
             .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(color.opacity(isSelected ? 1.0 : 0.3))
+                    .fill(color.opacity(isSelected ? 0.9 : 0.4))
             )
             .overlay(
                 Capsule()
-                    .strokeBorder(color, lineWidth: isSelected ? 2 : 0)
+                    .strokeBorder(lighterColor, lineWidth: isSelected ? 2 : 0)
             )
             .foregroundStyle(.white)
-            .opacity(isSelected ? 1.0 : 0.5)
+            .opacity(isSelected ? 1.0 : 0.7)
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
@@ -91,9 +90,11 @@ struct DrinkTypeSelectorView: View {
 }
 
 #Preview {
-    DrinkTypeSelectorView(
-        selectedDrinkTypes: .constant(Set(["Shot", "Wine", "Beer", "Cocktail"]))
-    ) { _ in }
-    .padding()
-    .background(Color(.systemGroupedBackground))
+    ZStack {
+        MeshGradientBackground(theme: .monochrome)
+        DrinkTypeSelectorView(
+            selectedDrinkTypes: .constant(Set(["Shot", "Wine", "Beer", "Cocktail"]))
+        ) { _ in }
+        .padding()
+    }
 }

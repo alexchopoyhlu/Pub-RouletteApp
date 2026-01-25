@@ -65,11 +65,8 @@ struct LobbyView: View {
             .navigationDestination(for: PartyStatus.self) { status in
                 destinationView(for: status)
             }
-            .sheet(isPresented: $showHostControls) {
+            .fullScreenCover(isPresented: $showHostControls) {
                 HostControlsSheet(viewModel: viewModel)
-                    .presentationDetents([.medium, .large])
-                    .presentationDragIndicator(.visible)
-                    .presentationBackground(.ultraThinMaterial)
             }
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK") {}
@@ -196,184 +193,205 @@ struct HostControlsSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 12) {
-                    // Teams slider
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Teams")
-                                .font(.bricolage(.headline))
-                            Spacer()
-                            Text("\(viewModel.teamCount)")
-                                .font(.bricolage(.title2))
-                                .foregroundStyle(.indigo)
-                        }
-                        Slider(
-                            value: Binding(
-                                get: { Double(viewModel.teamCount) },
-                                set: { viewModel.teamCount = Int($0) }
-                            ),
-                            in: Double(Constants.minTeamCount)...Double(Constants.maxTeamCount),
-                            step: 1
-                        )
-                        .tint(.indigo)
-                        .onChange(of: viewModel.teamCount) { _, _ in
-                            Haptics.selection()
-                            Task { await viewModel.updateSettings() }
-                        }
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color(.secondarySystemGroupedBackground))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
-                    )
+            ZStack {
+                MeshGradientBackground(theme: .monochrome)
 
-                    // Team Assignment Mode
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Team Assignment")
-                            .font(.bricolage(.headline))
+                ScrollView {
+                    VStack(spacing: 12) {
+                        // Teams and Pubs pickers side by side
+                        HStack(spacing: 12) {
+                            // Teams picker
+                            VStack(spacing: 8) {
+                                Text("Teams")
+                                    .font(.bricolage(.headline))
+                                    .foregroundStyle(.white)
 
-                        Picker("Assignment Mode", selection: Binding(
-                            get: { viewModel.teamAssignmentMode },
-                            set: { newMode in
-                                Haptics.selection()
-                                viewModel.updateTeamAssignmentMode(newMode)
-                            }
-                        )) {
-                            Text("Mixed").tag(TeamAssignmentMode.mixed)
-                            Text("Sequential").tag(TeamAssignmentMode.sequential)
-                        }
-                        .pickerStyle(.segmented)
-
-                        Text(viewModel.teamAssignmentMode == .mixed
-                            ? "Players distributed evenly across teams"
-                            : "Fill each team before moving to the next")
-                            .font(.bricolage(.caption))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color(.secondarySystemGroupedBackground))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
-                    )
-
-                    // Location and Custom Pubs buttons
-                    HStack(spacing: 12) {
-                        Button {
-                            viewModel.showLocationPicker = true
-                            Task {
-                                await viewModel.fetchCurrentLocationIfNeeded()
-                            }
-                        } label: {
-                            VStack(spacing: 6) {
-                                Image(systemName: "location.circle.fill")
-                                    .font(.title2)
-                                    .foregroundStyle(.indigo)
-                                Text("Search Area")
-                                    .font(.bricolage(.caption))
-                                Text(radiusDescription)
-                                    .font(.bricolage(.caption2))
-                                    .foregroundStyle(.secondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color(.secondarySystemGroupedBackground))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            viewModel.showCustomPubsPicker = true
-                        } label: {
-                            VStack(spacing: 6) {
-                                ZStack(alignment: .topTrailing) {
-                                    Image(systemName: "mug.fill")
-                                        .font(.title2)
-                                        .foregroundStyle(.indigo)
-                                    if !viewModel.customPubs.isEmpty {
-                                        Text("\(viewModel.customPubs.count)")
-                                            .font(.bricolage(.caption2))
-                                            .foregroundStyle(.white)
-                                            .padding(4)
-                                            .background(Circle().fill(.indigo))
-                                            .offset(x: 8, y: -4)
+                                Picker("Teams", selection: Binding(
+                                    get: { viewModel.teamCount },
+                                    set: { newValue in
+                                        Haptics.selection()
+                                        viewModel.teamCount = newValue
+                                        Task { await viewModel.updateSettings() }
+                                    }
+                                )) {
+                                    ForEach(Constants.minTeamCount...Constants.maxTeamCount, id: \.self) { count in
+                                        Text("\(count)").tag(count)
                                     }
                                 }
-                                Text("Custom Pubs")
-                                    .font(.bricolage(.caption))
-                                Text(customPubsDescription)
-                                    .font(.bricolage(.caption2))
-                                    .foregroundStyle(.secondary)
+                                .pickerStyle(.wheel)
+                                .frame(height: 120)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color(.secondarySystemGroupedBackground))
+                                    .fill(.ultraThinMaterial)
                             )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
 
-                    // Drink Types selector
-                    DrinkTypeSelectorView(selectedDrinkTypes: $viewModel.selectedDrinkTypes) { drinkType in
-                        viewModel.toggleDrinkType(drinkType)
-                    }
+                            // Pubs picker
+                            VStack(spacing: 8) {
+                                Text("Pubs")
+                                    .font(.bricolage(.headline))
+                                    .foregroundStyle(.white)
 
-                    // Start Game button
-                    Button {
-                        Haptics.success()
-                        Task {
-                            await viewModel.startGame()
-                            dismiss()
-                        }
-                    } label: {
-                        HStack {
-                            if viewModel.isLoading {
-                                ProgressView()
-                                    .tint(.white)
+                                Picker("Pubs", selection: Binding(
+                                    get: { viewModel.pubCount },
+                                    set: { newValue in
+                                        Haptics.selection()
+                                        viewModel.pubCount = newValue
+                                        Task { await viewModel.updateSettings() }
+                                    }
+                                )) {
+                                    ForEach(Constants.minPubCount...Constants.maxPubCount, id: \.self) { count in
+                                        Text("\(count)").tag(count)
+                                    }
+                                }
+                                .pickerStyle(.wheel)
+                                .frame(height: 120)
                             }
-                            Text(viewModel.isLoading ? "Starting Game..." : "Start Game")
-                                .font(.bricolage(.body))
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(.ultraThinMaterial)
+                            )
                         }
-                        .frame(maxWidth: .infinity)
+
+                        // Team Assignment Mode
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Team Assignment")
+                                .font(.bricolage(.headline))
+                                .foregroundStyle(.white)
+
+                            Picker("Assignment Mode", selection: Binding(
+                                get: { viewModel.teamAssignmentMode },
+                                set: { newMode in
+                                    Haptics.selection()
+                                    viewModel.updateTeamAssignmentMode(newMode)
+                                }
+                            )) {
+                                Text("Mixed").tag(TeamAssignmentMode.mixed)
+                                Text("Sequential").tag(TeamAssignmentMode.sequential)
+                            }
+                            .pickerStyle(.segmented)
+
+                            Text(viewModel.teamAssignmentMode == .mixed
+                                ? "Players distributed evenly across teams"
+                                : "Fill each team before moving to the next")
+                                .font(.bricolage(.caption))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
                         .padding()
-                        .background(viewModel.players.count >= 2 ? Color.green : Color.gray)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(.ultraThinMaterial)
+                        )
+
+                        // Location and Custom Pubs buttons
+                        HStack(spacing: 12) {
+                            Button {
+                                viewModel.showLocationPicker = true
+                                Task {
+                                    await viewModel.fetchCurrentLocationIfNeeded()
+                                }
+                            } label: {
+                                VStack(spacing: 6) {
+                                    Image(systemName: "location.circle.fill")
+                                        .font(.title2)
+                                        .foregroundStyle(.white)
+                                    Text("Search Area")
+                                        .font(.bricolage(.caption))
+                                        .foregroundStyle(.white)
+                                    Text(radiusDescription)
+                                        .font(.bricolage(.caption2))
+                                        .foregroundStyle(.white.opacity(0.6))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(.ultraThinMaterial)
+                                )
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                viewModel.showCustomPubsPicker = true
+                            } label: {
+                                VStack(spacing: 6) {
+                                    ZStack(alignment: .topTrailing) {
+                                        Image(systemName: "mug.fill")
+                                            .font(.title2)
+                                            .foregroundStyle(.white)
+                                        if !viewModel.customPubs.isEmpty {
+                                            Text("\(viewModel.customPubs.count)")
+                                                .font(.bricolage(.caption2))
+                                                .foregroundStyle(.black)
+                                                .padding(4)
+                                                .background(Circle().fill(.white))
+                                                .offset(x: 8, y: -4)
+                                        }
+                                    }
+                                    Text("Custom Pubs")
+                                        .font(.bricolage(.caption))
+                                        .foregroundStyle(.white)
+                                    Text(customPubsDescription)
+                                        .font(.bricolage(.caption2))
+                                        .foregroundStyle(.white.opacity(0.6))
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(.ultraThinMaterial)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        // Drink Types selector
+                        DrinkTypeSelectorView(selectedDrinkTypes: $viewModel.selectedDrinkTypes) { drinkType in
+                            viewModel.toggleDrinkType(drinkType)
+                        }
+
+                        // Start Game button
+                        Button {
+                            Haptics.success()
+                            Task {
+                                await viewModel.startGame()
+                                dismiss()
+                            }
+                        } label: {
+                            HStack {
+                                if viewModel.isLoading {
+                                    ProgressView()
+                                        .tint(.white)
+                                }
+                                Text(viewModel.isLoading ? "Starting Game..." : "Start Game")
+                                    .font(.bricolage(.headline))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(viewModel.players.count >= 2 ? Color.green : Color.gray)
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                        .disabled(viewModel.players.count < 2 || viewModel.isLoading)
+                        .padding(.top, 8)
                     }
-                    .disabled(viewModel.players.count < 2 || viewModel.isLoading)
-                    .padding(.top, 8)
+                    .padding()
                 }
-                .padding()
-                .padding(.top, -14)
             }
-            
             .navigationTitle("Game Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
                         dismiss()
                     }
+                    .foregroundStyle(.white)
                 }
             }
             .sheet(isPresented: $viewModel.showLocationPicker) {

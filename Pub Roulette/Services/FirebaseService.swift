@@ -28,9 +28,10 @@ final class FirebaseService {
         ])
     }
 
-    func updatePartySettings(code: String, teamCount: Int, searchRadius: Int, searchLatitude: Double?, searchLongitude: Double?) async throws {
+    func updatePartySettings(code: String, teamCount: Int, pubCount: Int, searchRadius: Int, searchLatitude: Double?, searchLongitude: Double?) async throws {
         var data: [String: Any] = [
             "teamCount": teamCount,
+            "pubCount": pubCount,
             "searchRadius": searchRadius
         ]
         if let lat = searchLatitude, let lon = searchLongitude {
@@ -204,6 +205,7 @@ final class FirebaseService {
             "hostId": party.hostId,
             "status": party.status.rawValue,
             "teamCount": party.teamCount,
+            "pubCount": party.pubCount,
             "searchRadius": party.searchRadius,
             "teamAssignmentMode": party.teamAssignmentMode.rawValue,
             "wheelState": encodeWheelState(party.wheelState),
@@ -255,13 +257,15 @@ final class FirebaseService {
         let wheelStateData = data["wheelState"] as? [String: Any]
         let wheelState = wheelStateData.flatMap { decodeWheelState(from: $0) } ?? WheelState()
 
-        let selectedDrinkTypes = data["selectedDrinkTypes"] as? [String] ?? Constants.drinkTypes
+        let selectedDrinkTypes = data["selectedDrinkTypes"] as? [String] ?? Constants.defaultSelectedDrinkTypes
+        let pubCount = data["pubCount"] as? Int ?? Constants.defaultPubCount
 
         return Party(
             code: code,
             hostId: hostId,
             status: status,
             teamCount: teamCount,
+            pubCount: pubCount,
             searchRadius: searchRadius,
             searchLatitude: searchLatitude,
             searchLongitude: searchLongitude,
