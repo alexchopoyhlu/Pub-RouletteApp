@@ -110,8 +110,10 @@ struct HomeView: View {
         isCreating = true
         do {
             _ = try await partyService.createParty(hostName: playerName.trimmingCharacters(in: .whitespaces))
+            Haptics.success()
             navigateToLobby = true
         } catch {
+            Haptics.error()
             errorMessage = error.localizedDescription
             showError = true
         }
@@ -125,9 +127,11 @@ struct HomeView: View {
                 code: partyCode.uppercased(),
                 playerName: playerName.trimmingCharacters(in: .whitespaces)
             )
+            Haptics.success()
             showJoinSheet = false
             navigateToLobby = true
         } catch {
+            Haptics.error()
             errorMessage = error.localizedDescription
             showError = true
         }

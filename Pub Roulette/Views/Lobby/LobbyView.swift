@@ -10,6 +10,10 @@ struct LobbyView: View {
     @State private var navigationPath = NavigationPath()
     @State private var showHostControls = false
     @Environment(\.dismiss) private var dismiss
+    
+    init(previewShowHostControls: Bool = false) {
+        _showHostControls = State(initialValue: previewShowHostControls)
+    }
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -51,6 +55,7 @@ struct LobbyView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Leave") {
+                        Haptics.warning()
                         viewModel.leaveParty()
                         dismiss()
                     }
@@ -95,6 +100,7 @@ struct LobbyView: View {
 
             Button {
                 UIPasteboard.general.string = viewModel.partyCode
+                Haptics.success()
             } label: {
                 Label("Copy Code", systemImage: "doc.on.doc")
                     .font(.bricolage(.caption))
@@ -212,12 +218,19 @@ struct HostControlsSheet: View {
                         )
                         .tint(.indigo)
                         .onChange(of: viewModel.teamCount) { _, _ in
+                            Haptics.selection()
                             Task { await viewModel.updateSettings() }
                         }
                     }
                     .padding()
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color(.secondarySystemGroupedBackground))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
+                    )
 
                     // Team Assignment Mode
                     VStack(alignment: .leading, spacing: 8) {
@@ -226,7 +239,10 @@ struct HostControlsSheet: View {
 
                         Picker("Assignment Mode", selection: Binding(
                             get: { viewModel.teamAssignmentMode },
-                            set: { viewModel.updateTeamAssignmentMode($0) }
+                            set: { newMode in
+                                Haptics.selection()
+                                viewModel.updateTeamAssignmentMode(newMode)
+                            }
                         )) {
                             Text("Mixed").tag(TeamAssignmentMode.mixed)
                             Text("Sequential").tag(TeamAssignmentMode.sequential)
@@ -240,8 +256,14 @@ struct HostControlsSheet: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding()
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color(.secondarySystemGroupedBackground))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
+                    )
 
                     // Location and Custom Pubs buttons
                     HStack(spacing: 12) {
@@ -263,8 +285,14 @@ struct HostControlsSheet: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(Color(.secondarySystemGroupedBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color(.secondarySystemGroupedBackground))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
+                            )
                         }
                         .buttonStyle(.plain)
 
@@ -293,14 +321,26 @@ struct HostControlsSheet: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(Color(.secondarySystemGroupedBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color(.secondarySystemGroupedBackground))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .strokeBorder(.primary.opacity(0.08), lineWidth: 1)
+                            )
                         }
                         .buttonStyle(.plain)
                     }
 
+                    // Drink Types selector
+                    DrinkTypeSelectorView(selectedDrinkTypes: $viewModel.selectedDrinkTypes) { drinkType in
+                        viewModel.toggleDrinkType(drinkType)
+                    }
+
                     // Start Game button
                     Button {
+                        Haptics.success()
                         Task {
                             await viewModel.startGame()
                             dismiss()
@@ -324,7 +364,9 @@ struct HostControlsSheet: View {
                     .padding(.top, 8)
                 }
                 .padding()
+                .padding(.top, -14)
             }
+            
             .navigationTitle("Game Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -388,6 +430,6 @@ struct HostControlsSheet: View {
 
 #Preview {
     NavigationStack {
-        LobbyView()
+        LobbyView(previewShowHostControls: true)
     }
 }

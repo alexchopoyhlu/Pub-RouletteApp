@@ -20,18 +20,11 @@ struct DrinkIconView: View {
     }
 
     private var drinkColor: Color {
-        switch drinkType {
-        case "Pint":
-            return .yellow
-        case "Shot":
-            return .orange
-        case "Cocktail":
-            return .pink
-        case "Wine":
-            return .purple
-        default:
-            return .gray
+        if let hex = Constants.drinkColors[drinkType],
+           let color = Color(hex: hex) {
+            return color
         }
+        return .gray
     }
 }
 
@@ -71,15 +64,22 @@ struct DrinkSlotView: View {
 #Preview {
     VStack(spacing: 20) {
         HStack(spacing: 20) {
-            DrinkIconView(drinkType: "Pint", size: 60)
             DrinkIconView(drinkType: "Shot", size: 60)
-            DrinkIconView(drinkType: "Cocktail", size: 60)
             DrinkIconView(drinkType: "Wine", size: 60)
+            DrinkIconView(drinkType: "Beer", size: 60)
+            DrinkIconView(drinkType: "Cocktail", size: 60)
+        }
+
+        HStack(spacing: 20) {
+            DrinkIconView(drinkType: "Spirits", size: 60)
+            DrinkIconView(drinkType: "Cider", size: 60)
+            DrinkIconView(drinkType: "Sparkling", size: 60)
+            DrinkIconView(drinkType: "No-Alcohol", size: 60)
         }
 
         DrinkSlotView(
             drinks: Constants.drinkTypes,
-            targetDrink: "Pint",
+            targetDrink: "Beer",
             offset: 0,
             isRevealed: true
         )

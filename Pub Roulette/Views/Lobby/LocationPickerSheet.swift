@@ -79,6 +79,7 @@ struct LocationPickerSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Confirm") {
+                        Haptics.success()
                         onConfirm(centerCoordinate, Int(selectedRadius))
                         dismiss()
                     }
@@ -150,6 +151,7 @@ struct LocationPickerSheet: View {
                 )
                 .tint(.orange)
                 .onChange(of: selectedRadius) { _, newValue in
+                    Haptics.selection()
                     updateMapZoom(for: newValue)
                 }
 

@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 @Observable
 final class PubRevealViewModel {
@@ -67,7 +68,9 @@ final class PubRevealViewModel {
             withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
                 revealedIndices.insert(i)
             }
+            Haptics.medium()
         }
+        Haptics.success()
         allRevealed = true
     }
 

@@ -138,7 +138,10 @@ struct RoutePubCard: View {
                 // Bottom row: Maps button (left) and Status (right)
                 HStack(alignment: .bottom) {
                     if status != .locked {
-                        Button(action: onMapsTapped) {
+                        Button {
+                            Haptics.light()
+                            onMapsTapped()
+                        } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "map.fill")
                                 Text("Maps")
@@ -197,7 +200,10 @@ struct RoutePubCard: View {
                 .background(Color.green)
                 .clipShape(Capsule())
         case .current:
-            Button(action: onViewTapped) {
+            Button {
+                Haptics.light()
+                onViewTapped()
+            } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "person.2.fill")
                     Text("\(submissionCount)/\(totalPlayers)")

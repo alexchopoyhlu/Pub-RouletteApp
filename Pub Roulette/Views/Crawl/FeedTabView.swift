@@ -113,11 +113,13 @@ struct FeedTabView: View {
         messageText = ""
         isSending = true
         isTextFieldFocused = false
+        Haptics.light()
 
         Task {
             do {
                 try await partyService.sendMessage(text: text)
             } catch {
+                Haptics.error()
                 messageText = text
             }
             isSending = false

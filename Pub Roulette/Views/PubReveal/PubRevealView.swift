@@ -33,6 +33,7 @@ struct PubRevealView: View {
 
                 if viewModel.allRevealed && viewModel.isHost {
                     Button {
+                        Haptics.medium()
                         Task {
                             await viewModel.proceedToDrinkReveal()
                             navigationPath.append(PartyStatus.drinkReveal)

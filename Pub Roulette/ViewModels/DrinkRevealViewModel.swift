@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 @Observable
 final class DrinkRevealViewModel {
@@ -84,10 +85,12 @@ final class DrinkRevealViewModel {
                 withAnimation(.spring(response: 0.2, dampingFraction: 0.8)) {
                     slotOffsets[i] = 0
                 }
+                Haptics.medium()
 
                 await MainActor.run {
                     revealedCount = max(revealedCount, i + 1)
                     if revealedCount >= drinks.count {
+                        Haptics.success()
                         allRevealed = true
                         isSpinning = false
                     }

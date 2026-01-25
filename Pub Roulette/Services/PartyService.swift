@@ -94,6 +94,11 @@ final class PartyService {
         try await firebaseService.updateCustomPubs(code: code, customPubs: pubs)
     }
 
+    func updateSelectedDrinkTypes(_ drinkTypes: [String]) async throws {
+        guard let code = currentParty?.code, isHost else { return }
+        try await firebaseService.updateSelectedDrinkTypes(code: code, drinkTypes: drinkTypes)
+    }
+
     func startGame() async throws {
         guard let party = currentParty, isHost else { return }
 
@@ -168,6 +173,9 @@ final class PartyService {
         // Pick a random final pub that all teams will end at
         let finalPubIndex = Int.random(in: 0..<pubCount)
 
+        // Use selected drink types or fall back to all types
+        let availableDrinks = party.selectedDrinkTypes.isEmpty ? Constants.drinkTypes : party.selectedDrinkTypes
+
         for i in 0..<updatedTeams.count {
             // Get all pub indices except the final one
             var pubIndices = Array(0..<pubCount).filter { $0 != finalPubIndex }
@@ -177,7 +185,7 @@ final class PartyService {
             updatedTeams[i].pubOrder = pubIndices
 
             updatedTeams[i].drinkOrder = (0..<pubCount).map { _ in
-                Constants.drinkTypes.randomElement() ?? "Pint"
+                availableDrinks.randomElement() ?? "Beer"
             }
         }
 

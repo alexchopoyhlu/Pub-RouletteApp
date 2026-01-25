@@ -27,7 +27,7 @@ final class CrawlViewModel {
 
         return team.pubOrder.enumerated().compactMap { (index, pubIndex) in
             guard let pub = party.pubs[safe: pubIndex] else { return nil }
-            let drink = team.drinkOrder[safe: index] ?? "Pint"
+            let drink = team.drinkOrder[safe: index] ?? "Beer"
             return (pub, drink)
         }
     }

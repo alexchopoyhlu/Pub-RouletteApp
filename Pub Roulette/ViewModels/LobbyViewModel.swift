@@ -12,6 +12,7 @@ final class LobbyViewModel {
     var searchLatitude: Double?
     var searchLongitude: Double?
     var teamAssignmentMode: TeamAssignmentMode = .mixed
+    var selectedDrinkTypes: Set<String> = Set(Constants.drinkTypes)
     var isLoading: Bool = false
     var errorMessage: String?
     var showError: Bool = false
@@ -54,6 +55,7 @@ final class LobbyViewModel {
             searchLatitude = party.searchLatitude
             searchLongitude = party.searchLongitude
             teamAssignmentMode = party.teamAssignmentMode
+            selectedDrinkTypes = Set(party.selectedDrinkTypes)
         }
     }
 
@@ -62,6 +64,22 @@ final class LobbyViewModel {
         Task {
             do {
                 try await partyService.updateTeamAssignmentMode(mode)
+            } catch {
+                showError(error)
+            }
+        }
+    }
+
+    func toggleDrinkType(_ drinkType: String) {
+        // Ensure at least one drink type is always selected
+        if selectedDrinkTypes.contains(drinkType) && selectedDrinkTypes.count > 1 {
+            selectedDrinkTypes.remove(drinkType)
+        } else {
+            selectedDrinkTypes.insert(drinkType)
+        }
+        Task {
+            do {
+                try await partyService.updateSelectedDrinkTypes(Array(selectedDrinkTypes))
             } catch {
                 showError(error)
             }

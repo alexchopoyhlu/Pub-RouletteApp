@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ResultsView: View {
     private let partyService = PartyService.shared
@@ -36,6 +37,10 @@ struct ResultsView: View {
             newGameButton
         }
         .navigationBarBackButtonHidden(true)
+        .onAppear {
+            // Celebration haptics when results appear
+            Haptics.success()
+        }
     }
 
     private var headerSection: some View {
@@ -137,6 +142,7 @@ struct ResultsView: View {
 
     private var newGameButton: some View {
         Button {
+            Haptics.medium()
             partyService.leaveParty()
         } label: {
             Text("New Game")

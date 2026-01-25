@@ -30,6 +30,7 @@ struct DrinkRevealView: View {
 
             if viewModel.allRevealed && viewModel.isHost {
                 Button {
+                    Haptics.success()
                     Task {
                         await viewModel.proceedToCrawl()
                         navigationPath.append(PartyStatus.active)

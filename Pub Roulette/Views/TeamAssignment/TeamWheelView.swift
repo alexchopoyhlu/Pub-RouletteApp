@@ -104,6 +104,7 @@ struct TeamWheelView: View {
 
                     if viewModel.isHost {
                         Button {
+                            Haptics.success()
                             Task {
                                 await viewModel.proceedToPubReveal()
                                 navigationPath.append(PartyStatus.pubReveal)
@@ -126,6 +127,7 @@ struct TeamWheelView: View {
                 }
             } else if viewModel.isHost {
                 Button {
+                    Haptics.heavy()
                     Task { await viewModel.spinWheel() }
                 } label: {
                     Text(viewModel.isSpinning ? "Spinning..." : "Spin!")
@@ -218,6 +220,7 @@ struct TeamCardView: View {
 
             if isMyTeam {
                 Button {
+                    Haptics.light()
                     onEditTapped()
                 } label: {
                     Image(systemName: "pencil")
@@ -276,6 +279,7 @@ struct EditTeamSheet: View {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 12) {
                             ForEach(Array(Constants.teamColors.enumerated()), id: \.offset) { index, colorInfo in
                                 Button {
+                                    Haptics.selection()
                                     selectedColorIndex = index
                                 } label: {
                                     Circle()
@@ -297,6 +301,7 @@ struct EditTeamSheet: View {
 
                 // Save button
                 Button {
+                    Haptics.success()
                     onUpdateTeam(
                         editedName.trimmingCharacters(in: .whitespaces),
                         Constants.teamColors[selectedColorIndex].hex

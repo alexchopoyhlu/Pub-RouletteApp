@@ -102,6 +102,7 @@ extension PubSubmissionSheet {
 
     private var cameraButton: some View {
         Button {
+            Haptics.light()
             showCamera = true
         } label: {
             HStack(spacing: 12) {
@@ -121,6 +122,7 @@ extension PubSubmissionSheet {
 
     private var submitButton: some View {
         Button {
+            Haptics.success()
             onSubmit()
             dismiss()
         } label: {
@@ -171,6 +173,7 @@ struct CameraView: UIViewControllerRepresentable {
         ) {
             if let image = info[.originalImage] as? UIImage {
                 parent.image = image
+                Haptics.success()
             }
             parent.dismiss()
         }

@@ -42,6 +42,7 @@ struct Party: Codable, Identifiable {
     var customPubs: [Pub]
     var teamAssignmentMode: TeamAssignmentMode
     var wheelState: WheelState
+    var selectedDrinkTypes: [String]
     let createdAt: Date
     var players: [Player]
     var teams: [Team]
@@ -58,6 +59,7 @@ struct Party: Codable, Identifiable {
         customPubs: [Pub] = [],
         teamAssignmentMode: TeamAssignmentMode = .mixed,
         wheelState: WheelState = WheelState(),
+        selectedDrinkTypes: [String] = Constants.drinkTypes,
         createdAt: Date = Date(),
         players: [Player] = [],
         teams: [Team] = [],
@@ -73,6 +75,7 @@ struct Party: Codable, Identifiable {
         self.customPubs = customPubs
         self.teamAssignmentMode = teamAssignmentMode
         self.wheelState = wheelState
+        self.selectedDrinkTypes = selectedDrinkTypes
         self.createdAt = createdAt
         self.players = players
         self.teams = teams

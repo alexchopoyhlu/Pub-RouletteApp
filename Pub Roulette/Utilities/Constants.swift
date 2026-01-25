@@ -25,24 +25,47 @@ enum Constants {
     ]
 
     static let drinkTypes: [String] = [
-        "Pint",
         "Shot",
+        "Wine",
+        "Beer",
         "Cocktail",
-        "Wine"
+        "Spirits",
+        "Cider",
+        "Sparkling",
+        "No-Alcohol"
     ]
 
     static let drinkEmojis: [String: String] = [
-        "Pint": "🍺",
         "Shot": "🥃",
+        "Wine": "🍷",
+        "Beer": "🍺",
         "Cocktail": "🍹",
-        "Wine": "🍷"
+        "Spirits": "🍸",
+        "Cider": "🍏",
+        "Sparkling": "🥂",
+        "No-Alcohol": "🧃"
     ]
 
     static let drinkIcons: [String: String] = [
-        "Pint": "mug.fill",
         "Shot": "wineglass.fill",
+        "Wine": "wineglass.fill",
+        "Beer": "mug.fill",
         "Cocktail": "tropicaldrink.fill",
-        "Wine": "wineglass.fill"
+        "Spirits": "wineglass.fill",
+        "Cider": "leaf.fill",
+        "Sparkling": "sparkles",
+        "No-Alcohol": "drop.fill"
+    ]
+
+    static let drinkColors: [String: String] = [
+        "Shot": "#3F51B5",      // Indigo
+        "Wine": "#8B1538",      // Burgundy
+        "Beer": "#C49A20",      // Golden amber
+        "Cocktail": "#D81B9C",  // Magenta/Pink
+        "Spirits": "#00897B",   // Teal
+        "Cider": "#7CB342",     // Apple green
+        "Sparkling": "#FFB300", // Gold/Champagne
+        "No-Alcohol": "#FF7043" // Coral orange
     ]
 
     static let minSearchRadius: Int = 100

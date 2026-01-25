@@ -106,6 +106,7 @@ struct CustomPubsSheet: View {
                             Spacer()
 
                             Button {
+                                Haptics.light()
                                 onRemovePub(pub)
                             } label: {
                                 Image(systemName: "minus.circle.fill")
@@ -135,6 +136,7 @@ struct CustomPubsSheet: View {
                                     .foregroundStyle(.green)
                             } else {
                                 Button {
+                                    Haptics.success()
                                     addPub(from: item)
                                 } label: {
                                     Image(systemName: "plus.circle.fill")

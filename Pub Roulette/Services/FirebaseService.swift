@@ -207,6 +207,7 @@ final class FirebaseService {
             "searchRadius": party.searchRadius,
             "teamAssignmentMode": party.teamAssignmentMode.rawValue,
             "wheelState": encodeWheelState(party.wheelState),
+            "selectedDrinkTypes": party.selectedDrinkTypes,
             "createdAt": Timestamp(date: party.createdAt),
             "players": party.players.map { encodePlayer($0) },
             "teams": party.teams.map { encodeTeam($0) },
@@ -254,6 +255,8 @@ final class FirebaseService {
         let wheelStateData = data["wheelState"] as? [String: Any]
         let wheelState = wheelStateData.flatMap { decodeWheelState(from: $0) } ?? WheelState()
 
+        let selectedDrinkTypes = data["selectedDrinkTypes"] as? [String] ?? Constants.drinkTypes
+
         return Party(
             code: code,
             hostId: hostId,
@@ -265,6 +268,7 @@ final class FirebaseService {
             customPubs: customPubs,
             teamAssignmentMode: teamAssignmentMode,
             wheelState: wheelState,
+            selectedDrinkTypes: selectedDrinkTypes,
             createdAt: createdAtTimestamp.dateValue(),
             players: players,
             teams: teams,
@@ -406,6 +410,12 @@ final class FirebaseService {
     func updateTeamAssignmentMode(code: String, mode: TeamAssignmentMode) async throws {
         try await db.collection("parties").document(code).updateData([
             "teamAssignmentMode": mode.rawValue
+        ])
+    }
+
+    func updateSelectedDrinkTypes(code: String, drinkTypes: [String]) async throws {
+        try await db.collection("parties").document(code).updateData([
+            "selectedDrinkTypes": drinkTypes
         ])
     }
 }
