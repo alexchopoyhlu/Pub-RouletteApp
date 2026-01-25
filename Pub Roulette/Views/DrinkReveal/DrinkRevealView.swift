@@ -24,12 +24,25 @@ struct DrinkRevealView: View {
                                 drink: item.1,
                                 index: index,
                                 isRevealed: index < viewModel.revealedCount,
-                                slotOffset: viewModel.slotOffsets[safe: index] ?? 0
+                                slotOffset: viewModel.slotOffsets[safe: index] ?? 0,
+                                isSpinning: viewModel.slotSpinning[safe: index] ?? false
                             )
                         }
                     }
                     .padding()
                 }
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .black, location: 0.08),
+                            .init(color: .black, location: 0.92),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
 
                 if viewModel.allRevealed && viewModel.isHost {
                     Button {
@@ -90,47 +103,68 @@ struct DrinkRevealView: View {
             .clipShape(Capsule())
     }
 
-    private func drinkPubRow(pub: Pub, drink: String, index: Int, isRevealed: Bool, slotOffset: CGFloat) -> some View {
-        HStack(spacing: 16) {
-            ZStack {
-                if isRevealed {
-                    DrinkIconView(drinkType: drink, size: 50)
-                        .transition(.scale.combined(with: .opacity))
-                } else {
-                    DrinkSlotView(
-                        drinks: Constants.drinkTypes,
-                        targetDrink: drink,
-                        offset: slotOffset,
-                        isRevealed: false
-                    )
-                    .frame(width: 50, height: 50)
-                    .clipShape(Circle())
-                }
-            }
-            .frame(width: 60, height: 60)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("#\(index + 1)")
-                    .font(.bricolage(.caption))
-                    .foregroundStyle(.secondary)
-
-                Text(pub.name)
-                    .font(.bricolage(.headline))
-
-                if isRevealed {
-                    Text(drink)
-                        .font(.bricolage(.subheadline))
-                        .foregroundStyle(.orange)
+    private func drinkPubRow(pub: Pub, drink: String, index: Int, isRevealed: Bool, slotOffset: CGFloat, isSpinning: Bool) -> some View {
+        ZStack {
+            // MARK: - Large background number
+            if isRevealed {
+                HStack {
+                    Spacer()
+                    Text("#\(index + 1)")
+                        .font(.system(size: 64, weight: .bold, design: .rounded))
+                        .foregroundStyle(.orange.opacity(0.12))
+                        .padding(.trailing, 12)
+                        .allowsHitTesting(false) // so it doesn't block taps
                 }
             }
 
-            Spacer()
+            // MARK: - Row content
+            HStack(spacing: 16) {
+                ZStack {
+                    if isRevealed {
+                        DrinkIconView(drinkType: drink, size: 50)
+                            .transition(.scale.combined(with: .opacity))
+                    } else {
+                        DrinkSlotView(
+                            drinks: Constants.drinkTypes,
+                            targetDrink: drink,
+                            offset: slotOffset,
+                            isRevealed: false,
+                            isSpinning: isSpinning
+                        )
+                        .frame(width: 50, height: 50)
+                        .clipShape(Circle())
+                    }
+                }
+                .frame(width: 60, height: 60)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    // Small number only when hidden
+                    if !isRevealed {
+                        Text("#\(index + 1)")
+                            .font(.bricolage(.caption))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Text(pub.name)
+                        .font(.bricolage(.headline))
+
+                    if isRevealed {
+                        Text(drink)
+                            .font(.bricolage(.subheadline))
+                            .foregroundStyle(.orange)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .padding()
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
+
+
 
 #Preview {
     @Previewable @State var path = NavigationPath()

@@ -147,15 +147,21 @@ struct MessageBubbleView: View {
 
             VStack(alignment: isCurrentUser ? .trailing : .leading, spacing: 4) {
                 HStack(spacing: 6) {
+                    
+                    Text(isCurrentUser ? "You" : message.senderName)
+                        .font(.bricolage(.caption))
+                        .foregroundStyle(.secondary)
+                    
                     if let teamColor = teamColor {
                         Circle()
                             .fill(teamColor)
                             .frame(width: 8, height: 8)
                     }
-
-                    Text(isCurrentUser ? "You" : message.senderName)
+                    
+                    Text(message.timestamp.formatted(.dateTime.hour().minute())) // 24h format
                         .font(.bricolage(.caption))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.tertiary)
+                    
                 }
 
                 Text(message.text)
@@ -165,10 +171,6 @@ struct MessageBubbleView: View {
                     .background(isCurrentUser ? Color.blue : Color(.systemGray5))
                     .foregroundStyle(isCurrentUser ? .white : .primary)
                     .clipShape(RoundedRectangle(cornerRadius: 18))
-
-                Text(message.timestamp.timeAgoDisplay())
-                    .font(.bricolage(.caption2))
-                    .foregroundStyle(.tertiary)
             }
 
             if !isCurrentUser {

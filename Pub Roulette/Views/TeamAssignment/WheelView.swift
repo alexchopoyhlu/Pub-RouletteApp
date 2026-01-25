@@ -42,9 +42,10 @@ struct PlayerWheelView: View {
                         .fill(Color.gray.opacity(0.3))
                         .frame(width: size - 20, height: size - 20)
 
-                    Text("All assigned!")
+                    Text("All players assigned!")
                         .font(.bricolage(.headline))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.green)
+                        .rotationEffect(.degrees(-rotation))
                 } else {
                     // Wheel segments
                     ForEach(Array(players.enumerated()), id: \.element.id) { index, player in
@@ -55,16 +56,19 @@ struct PlayerWheelView: View {
                         )
                     }
 
-                    // Player names at angle
+                    // Player names along radius, pointing outward
                     ForEach(Array(players.enumerated()), id: \.element.id) { index, _ in
                         let midAngle = segmentMidAngle(for: index)
                         let radius = (size / 2 - 10) * 0.65
+                        // Flip text on left half of wheel for readability
+                        let isLeftHalf = cos(midAngle * .pi / 180) < 0
+                        let textRotation = isLeftHalf ? midAngle + 180 : midAngle
 
                         Text(players[index].name)
                             .font(.bricolage(size: players.count > 6 ? 12 : 14, weight: .semibold))
                             .foregroundStyle(.white)
                             .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
-                            .rotationEffect(.degrees(45))
+                            .rotationEffect(.degrees(textRotation))
                             .position(
                                 x: size / 2 + radius * cos(CGFloat(midAngle) * .pi / 180),
                                 y: size / 2 + radius * sin(CGFloat(midAngle) * .pi / 180)

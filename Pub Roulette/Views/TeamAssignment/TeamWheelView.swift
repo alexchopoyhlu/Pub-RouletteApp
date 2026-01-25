@@ -94,9 +94,6 @@ struct TeamWheelView: View {
         Group {
             if viewModel.allPlayersAssigned {
                 VStack(spacing: 16) {
-                    Text("All players assigned!")
-                        .font(.bricolage(.headline))
-                        .foregroundStyle(.green)
 
                     if viewModel.isHost {
                         Button {

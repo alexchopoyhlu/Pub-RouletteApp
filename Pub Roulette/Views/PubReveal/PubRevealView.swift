@@ -30,6 +30,18 @@ struct PubRevealView: View {
                     }
                     .padding()
                 }
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .black, location: 0.08),
+                            .init(color: .black, location: 0.92),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
 
                 if viewModel.allRevealed && viewModel.isHost {
                     Button {
@@ -89,6 +101,9 @@ struct PubRevealView: View {
             .clipShape(Capsule())
     }
 }
+
+
+
 
 #Preview {
     @Previewable @State var path = NavigationPath()
