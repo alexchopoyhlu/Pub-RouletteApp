@@ -6,52 +6,58 @@ struct DrinkRevealView: View {
     @State private var hasStarted = false
 
     var body: some View {
-        VStack(spacing: 24) {
-            headerSection
+        ZStack {
+            MeshGradientBackground(theme: .sunset)
 
-            if let team = viewModel.myTeam {
-                teamBadge(team)
-            }
+            VStack(spacing: 24) {
+                headerSection
 
-            ScrollView {
-                VStack(spacing: 16) {
-                    ForEach(Array(zip(viewModel.pubs, viewModel.drinks).enumerated()), id: \.offset) { index, item in
-                        drinkPubRow(
-                            pub: item.0,
-                            drink: item.1,
-                            index: index,
-                            isRevealed: index < viewModel.revealedCount,
-                            slotOffset: viewModel.slotOffsets[safe: index] ?? 0
-                        )
-                    }
+                if let team = viewModel.myTeam {
+                    teamBadge(team)
                 }
-                .padding()
-            }
 
-            if viewModel.allRevealed && viewModel.isHost {
-                Button {
-                    Haptics.success()
-                    Task {
-                        await viewModel.proceedToCrawl()
-                        navigationPath.append(PartyStatus.active)
+                ScrollView {
+                    VStack(spacing: 16) {
+                        ForEach(Array(zip(viewModel.pubs, viewModel.drinks).enumerated()), id: \.offset) { index, item in
+                            drinkPubRow(
+                                pub: item.0,
+                                drink: item.1,
+                                index: index,
+                                isRevealed: index < viewModel.revealedCount,
+                                slotOffset: viewModel.slotOffsets[safe: index] ?? 0
+                            )
+                        }
                     }
-                } label: {
-                    Text("Start the Crawl!")
-                        .font(.bricolage(.headline))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding()
                 }
-                .padding(.horizontal)
-            } else if viewModel.allRevealed {
-                Text("Waiting for host to start...")
-                    .font(.bricolage(.body))
-                    .foregroundStyle(.secondary)
+
+                if viewModel.allRevealed && viewModel.isHost {
+                    Button {
+                        Haptics.success()
+                        Task {
+                            await viewModel.proceedToCrawl()
+                            navigationPath.append(PartyStatus.active)
+                        }
+                    } label: {
+                        Text("Start the Crawl!")
+                            .font(.bricolage(.headline))
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .padding(.horizontal)
+                } else if viewModel.allRevealed {
+                    Text("Waiting for host to start...")
+                        .font(.bricolage(.body))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
             }
         }
         .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
             if !hasStarted {
                 hasStarted = true
@@ -65,10 +71,11 @@ struct DrinkRevealView: View {
         VStack(spacing: 8) {
             Text("Your Drinks")
                 .font(.bricolage(.title))
+                .foregroundStyle(.white)
 
             Text("Each pub has an assigned drink!")
                 .font(.bricolage(.subheadline))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.8))
         }
         .padding(.top)
     }
@@ -120,7 +127,7 @@ struct DrinkRevealView: View {
             Spacer()
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }

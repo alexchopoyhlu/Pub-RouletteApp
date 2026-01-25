@@ -65,8 +65,10 @@ struct LobbyView: View {
             .navigationDestination(for: PartyStatus.self) { status in
                 destinationView(for: status)
             }
-            .fullScreenCover(isPresented: $showHostControls) {
+            .sheet(isPresented: $showHostControls) {
                 HostControlsSheet(viewModel: viewModel)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
             }
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK") {}
@@ -387,8 +389,8 @@ struct HostControlsSheet: View {
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
                         dismiss()
                     }
                     .foregroundStyle(.white)

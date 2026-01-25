@@ -4,7 +4,6 @@ import UIKit
 struct TeamWheelView: View {
     @Binding var navigationPath: NavigationPath
     @State private var viewModel = TeamWheelViewModel()
-    @State private var showEditTeamSheet = false
     @State private var selectedTeamForEdit: Team?
 
     var body: some View {
@@ -71,26 +70,23 @@ struct TeamWheelView: View {
                         isMyTeam: team.id == viewModel.currentPlayerTeamId,
                         onEditTapped: {
                             selectedTeamForEdit = team
-                            showEditTeamSheet = true
                         }
                     )
                 }
             }
             .padding(.horizontal)
         }
-        .sheet(isPresented: $showEditTeamSheet) {
-            if let team = selectedTeamForEdit {
-                EditTeamSheet(
-                    team: team,
-                    onUpdateTeam: { name, colorHex in
-                        Task {
-                            await viewModel.updateTeam(teamId: team.id, newName: name, newColorHex: colorHex)
-                        }
+        .sheet(item: $selectedTeamForEdit) { team in
+            EditTeamSheet(
+                team: team,
+                onUpdateTeam: { name, colorHex in
+                    Task {
+                        await viewModel.updateTeam(teamId: team.id, newName: name, newColorHex: colorHex)
                     }
-                )
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-            }
+                }
+            )
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
         }
     }
 

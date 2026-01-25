@@ -89,6 +89,7 @@ struct HomeView: View {
             .navigationDestination(isPresented: $navigateToLobby) {
                 LobbyView()
             }
+            .animation(.easeInOut(duration: 0.3), value: navigateToLobby)
             .sheet(isPresented: $showJoinSheet) {
                 JoinPartySheet(
                     playerName: playerName,
