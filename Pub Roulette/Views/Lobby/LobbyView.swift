@@ -25,8 +25,9 @@ struct LobbyView: View {
 
                     playerListSection
 
+                    Spacer()
+
                     if viewModel.isHost {
-                        Spacer()
                         // Button to open host controls sheet
                         Button {
                             showHostControls = true
@@ -44,6 +45,11 @@ struct LobbyView: View {
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 8)
+                    } else {
+                        // Waiting message for non-hosts
+                        waitingMessageView
+                            .padding(.horizontal)
+                            .padding(.bottom, 8)
                     }
                 }
             }
@@ -141,11 +147,38 @@ struct LobbyView: View {
         }
     }
 
+    private var waitingMessageView: some View {
+        let message: String = {
+            if viewModel.party?.status == .pubSelection {
+                return "Host is confirming pubs..."
+            } else {
+                return "Waiting for host to start..."
+            }
+        }()
+
+        return HStack {
+            ProgressView()
+                .tint(.white)
+            Text(message)
+                .font(.bricolage(.subheadline))
+                .foregroundStyle(.white.opacity(0.7))
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
     private func handleStatusChange(oldStatus: PartyStatus?, newStatus: PartyStatus?) {
         print("LobbyView: Status change from \(String(describing: oldStatus)) to \(String(describing: newStatus))")
         print("LobbyView: Current navigation path count: \(navigationPath.count)")
 
         guard let newStatus = newStatus, newStatus != .lobby else { return }
+
+        // Non-hosts stay in lobby during pub selection
+        if newStatus == .pubSelection && !viewModel.isHost {
+            return
+        }
 
         // Clear navigation path if we're going back to an earlier state
         if let oldStatus = oldStatus, statusOrder(oldStatus) > statusOrder(newStatus) {
@@ -162,17 +195,20 @@ struct LobbyView: View {
     private func statusOrder(_ status: PartyStatus) -> Int {
         switch status {
         case .lobby: return 0
-        case .teamAssignment: return 1
-        case .pubReveal: return 2
-        case .drinkReveal: return 3
-        case .active: return 4
-        case .finished: return 5
+        case .pubSelection: return 1
+        case .teamAssignment: return 2
+        case .pubReveal: return 3
+        case .drinkReveal: return 4
+        case .active: return 5
+        case .finished: return 6
         }
     }
 
     @ViewBuilder
     private func destinationView(for status: PartyStatus) -> some View {
         switch status {
+        case .pubSelection:
+            PubSelectionView(navigationPath: $navigationPath)
         case .teamAssignment:
             TeamWheelView(navigationPath: $navigationPath)
         case .pubReveal:

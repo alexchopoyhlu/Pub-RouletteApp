@@ -2,6 +2,7 @@ import Foundation
 
 enum PartyStatus: String, Codable, Hashable {
     case lobby
+    case pubSelection      // Host confirms/edits pubs before starting
     case teamAssignment
     case pubReveal
     case drinkReveal

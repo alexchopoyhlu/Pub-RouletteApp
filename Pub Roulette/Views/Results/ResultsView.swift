@@ -55,7 +55,7 @@ struct ResultsView: View {
                 .font(.bricolage(.title))
                 .foregroundStyle(.white.opacity(0.9))
 
-            Text("winner!")
+            Text("WINNER!")
                 .font(.bricolage(size: 48))
                 .foregroundStyle(.white)
         }
@@ -77,7 +77,7 @@ struct ResultsView: View {
     private func proofSection(_ team: Team) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Check proof")
+                Text("Their route")
                     .font(.bricolage(.headline))
                     .foregroundStyle(.white)
 
@@ -109,46 +109,32 @@ struct ResultsView: View {
         let pub = party?.pubs[safe: pubIndex]
         let drink = team.drinkOrder[safe: pubOrderIndex] ?? "Beer"
         let completionTime = calculateCompletionTime(team: team, pubOrderIndex: pubOrderIndex)
-        let playerSubmissions = getPlayerSubmissions(team: team, pubOrderIndex: pubOrderIndex)
 
-        return VStack(alignment: .leading, spacing: 12) {
-            // Header row with pub info and drink
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    // Pub name with time
-                    HStack(spacing: 8) {
-                        if let pubName = pub?.name {
-                            Text(pubName)
-                                .font(.bricolage(.headline))
-                                .foregroundStyle(.white)
-                        } else {
-                            Text(pubOrdinal(pubOrderIndex + 1) + " Pub")
-                                .font(.bricolage(.headline))
-                                .foregroundStyle(.white)
-                        }
-
-                        if let time = completionTime {
-                            Text("- \(time)")
-                                .font(.bricolage(.subheadline))
-                                .foregroundStyle(.white.opacity(0.7))
-                        }
-                    }
+        return HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                // Pub name
+                if let pubName = pub?.name {
+                    Text(pubName)
+                        .font(.bricolage(.headline))
+                        .foregroundStyle(.white)
+                } else {
+                    Text(pubOrdinal(pubOrderIndex + 1) + " Pub")
+                        .font(.bricolage(.headline))
+                        .foregroundStyle(.white)
                 }
 
-                Spacer()
-
-                // Drink badge
-                drinkBadge(drink: drink)
-            }
-
-            // Player proof cards
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(playerSubmissions, id: \.id) { player in
-                        playerProofCard(player: player)
-                    }
+                // Time to complete
+                if let time = completionTime {
+                    Text(time)
+                        .font(.bricolage(.caption))
+                        .foregroundStyle(.white.opacity(0.7))
                 }
             }
+
+            Spacer()
+
+            // Drink badge
+            drinkBadge(drink: drink)
         }
         .padding()
         .background(
@@ -181,26 +167,6 @@ struct ResultsView: View {
         case "No-Alcohol": return .blue
         default: return Color(red: 0.77, green: 0.6, blue: 0.13) // Beer gold
         }
-    }
-
-    private func playerProofCard(player: Player) -> some View {
-        VStack(spacing: 8) {
-            // Photo placeholder - showing a camera icon since photos aren't stored
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.2))
-                .frame(width: 70, height: 70)
-                .overlay(
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title)
-                        .foregroundStyle(.green)
-                )
-
-            Text(player.name)
-                .font(.bricolage(.caption))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-        }
-        .frame(width: 80)
     }
 
     private func calculateCompletionTime(team: Team, pubOrderIndex: Int) -> String? {
@@ -239,17 +205,6 @@ struct ResultsView: View {
         }
     }
 
-    private func getPlayerSubmissions(team: Team, pubOrderIndex: Int) -> [Player] {
-        guard let party = party else { return [] }
-
-        let pubKey = String(pubOrderIndex)
-        let playerIds = team.submissions[pubKey] ?? []
-
-        return playerIds.compactMap { playerId in
-            party.players.first { $0.id == playerId }
-        }
-    }
-
     private func pubOrdinal(_ number: Int) -> String {
         let suffix: String
         switch number {
@@ -268,13 +223,19 @@ struct ResultsView: View {
                 await partyService.leaveParty()
             }
         } label: {
-            Text("New Game")
+            Text("Back to Home")
                 .font(.bricolage(.headline))
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.white.opacity(0.2))
+                .background {
+                    MeshGradientBackground(theme: .sunset)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.9), lineWidth: 3.0)
+                        )
+                }
                 .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .padding(.horizontal)
     }

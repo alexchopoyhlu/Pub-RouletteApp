@@ -119,20 +119,13 @@ struct TeamWheelView: View {
                     }
                 }
             } else if viewModel.isHost {
-                Button {
-                    Haptics.heavy()
-                    Task { await viewModel.spinWheel() }
-                } label: {
-                    Text(viewModel.isSpinning ? "Spinning..." : "Spin!")
-                        .font(.bricolage(.largeTitle))
-                        .fontWeight(.bold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 20)
-                        .background(viewModel.isSpinning ? Color.gray.opacity(0.5) : Color.gray.opacity(0.8))
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-                .disabled(viewModel.isSpinning)
+                SpinButton(
+                    isSpinning: viewModel.isSpinning,
+                    action: {
+                        Haptics.heavy()
+                        Task { await viewModel.spinWheel() }
+                    }
+                )
                 .padding(.horizontal, 40)
             } else {
                 VStack(spacing: 8) {
@@ -338,9 +331,119 @@ struct EditTeamSheet: View {
     }
 }
 
-#Preview {
+// MARK: - Spin Button with Animated Mesh Gradient
+
+struct SpinButton: View {
+    let isSpinning: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(isSpinning ? "Spinning..." : "Spin!")
+                .font(.bricolage(.largeTitle))
+                .fontWeight(.bold)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+        }
+        .background {
+            MeshGradientBackground(theme: .midnight)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(.white.opacity(0.85), lineWidth: 2)
+                )
+        }
+        .opacity(isSpinning ? 0.7 : 1.0)
+        .disabled(isSpinning)
+    }
+}
+
+@available(iOS 18.0, *)
+struct SpinButtonMeshGradient: View {
+    var body: some View {
+        TimelineView(.animation) { context in
+            let time = context.date.timeIntervalSince1970
+            let speed: Double = 0.6
+            let t = time * speed
+
+            // Animated control point offsets for flowing effect
+            let offset1 = Float(sin(t * 1.0)) * 0.15
+            let offset2 = Float(cos(t * 0.8)) * 0.15
+            let offset3 = Float(sin(t * 1.3)) * 0.12
+            let offset4 = Float(cos(t * 1.1)) * 0.12
+
+            MeshGradient(
+                width: 3,
+                height: 3,
+                points: [
+                    // Top row
+                    [0.0, 0.0], [0.5 + offset1, 0.0], [1.0, 0.0],
+                    // Middle row - animated for flowing effect
+                    [0.0 + offset3, 0.5], [0.5 + offset2, 0.5 + offset1], [1.0 - offset3, 0.5],
+                    // Bottom row
+                    [0.0, 1.0], [0.5 - offset4, 1.0], [1.0, 1.0]
+                ],
+                colors: [
+                    // Top row: purple to blue-purple
+                    Color(red: 0.55, green: 0.0, blue: 0.9),
+                    Color(red: 0.45, green: 0.1, blue: 0.95),
+                    Color(red: 0.6, green: 0.2, blue: 0.85),
+
+                    // Middle row: vibrant purple-pink blend
+                    Color(red: 0.85, green: 0.15, blue: 0.75),
+                    Color(red: 0.7, green: 0.1, blue: 0.9),
+                    Color(red: 0.95, green: 0.35, blue: 0.7),
+
+                    // Bottom row: hot pink to magenta
+                    Color(red: 1.0, green: 0.3, blue: 0.65),
+                    Color(red: 0.9, green: 0.2, blue: 0.8),
+                    Color(red: 0.8, green: 0.25, blue: 0.9)
+                ]
+            )
+        }
+    }
+}
+
+struct SpinButtonGradientFallback: View {
+    @State private var animate = false
+
+    var body: some View {
+        LinearGradient(
+            colors: [
+                Color(red: 0.55, green: 0.0, blue: 0.9),
+                Color(red: 0.85, green: 0.15, blue: 0.75),
+                Color(red: 1.0, green: 0.3, blue: 0.65)
+            ],
+            startPoint: animate ? .topLeading : .bottomLeading,
+            endPoint: animate ? .bottomTrailing : .topTrailing
+        )
+        .onAppear {
+            withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) {
+                animate = true
+            }
+        }
+    }
+}
+
+#Preview("Team Wheel View") {
     @Previewable @State var path = NavigationPath()
     NavigationStack {
         TeamWheelView(navigationPath: $path)
+    }
+}
+
+#Preview("Spin Button") {
+    ZStack {
+        MeshGradientBackground(theme: .aurora)
+        VStack(spacing: 20) {
+            SpinButton(isSpinning: false) {
+                print("Spin!")
+            }
+            SpinButton(isSpinning: true) {
+                print("Spinning...")
+            }
+        }
+        .padding(.horizontal, 40)
     }
 }

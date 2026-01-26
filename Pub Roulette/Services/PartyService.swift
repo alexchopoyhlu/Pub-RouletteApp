@@ -132,10 +132,36 @@ final class PartyService {
         let selectedPubs = Array(allPubs.shuffled().prefix(party.pubCount))
         try await firebaseService.setPubs(for: party.code, pubs: selectedPubs)
 
+        // Go to pub selection for host to confirm
+        try await firebaseService.updatePartyStatus(code: party.code, status: .pubSelection)
+    }
+
+    func confirmPubSelection() async throws {
+        guard let party = currentParty, isHost else { return }
+
+        // Create teams and proceed to team assignment
         let teams = createTeams(count: party.teamCount)
         try await firebaseService.setTeams(for: party.code, teams: teams)
 
         try await firebaseService.updatePartyStatus(code: party.code, status: .teamAssignment)
+    }
+
+    func updatePubs(_ pubs: [Pub]) async throws {
+        guard let code = currentParty?.code, isHost else { return }
+        try await firebaseService.setPubs(for: code, pubs: pubs)
+    }
+
+    func searchMorePubs() async throws -> [Pub] {
+        guard let party = currentParty else { return [] }
+
+        let searchLocation: CLLocation?
+        if let lat = party.searchLatitude, let lon = party.searchLongitude {
+            searchLocation = CLLocation(latitude: lat, longitude: lon)
+        } else {
+            searchLocation = nil
+        }
+
+        return try await locationService.searchNearbyPubs(radius: party.searchRadius, at: searchLocation)
     }
 
     private func createTeams(count: Int) -> [Team] {
