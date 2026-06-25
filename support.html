@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pub Roulette - Support & Help</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        main {
+            padding: 40px;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        section h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        section h3 {
+            color: #555;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .subsection {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .subsection h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subsection strong {
+            color: #764ba2;
+        }
+
+        ol, ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .faq-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .faq-item strong {
+            color: #667eea;
+        }
+
+        .faq-item p {
+            margin-top: 10px;
+            color: #555;
+        }
+
+        .contact-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .contact-box h3 {
+            color: white;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .contact-box p {
+            margin-bottom: 15px;
+        }
+
+        .contact-box a {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .contact-box a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #ddd;
+        }
+
+        .toc {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .toc h3 {
+            margin-top: 0;
+        }
+
+        .toc ul {
+            list-style: none;
+            margin: 0;
+        }
+
+        .toc li {
+            margin: 8px 0;
+        }
+
+        .toc a {
+            color: #667eea;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+
+        .emoji {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            main {
+                padding: 20px;
+            }
+
+            section h2 {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍺 Pub Roulette Support</h1>
+            <p>Get help with Pub Roulette</p>
+        </header>
+
+        <main>
+            <div class="toc">
+                <h3>Quick Navigation</h3>
+                <ul>
+                    <li><a href="#getting-started">Getting Started</a></li>
+                    <li><a href="#common-issues">Common Issues</a></li>
+                    <li><a href="#troubleshooting">Troubleshooting</a></li>
+                    <li><a href="#faq">Frequently Asked Questions</a></li>
+                    <li><a href="#contact">Contact Support</a></li>
+                </ul>
+            </div>
+
+            <section id="getting-started">
+                <h2>🚀 Getting Started</h2>
+
+                <h3>Creating a Party</h3>
+                <ol>
+                    <li>Open Pub Roulette and tap <strong>"Create a Party"</strong></li>
+                    <li>Enter your name</li>
+                    <li>Share the 6-character party code with your friends</li>
+                    <li>Customize your crawl settings:
+                        <ul>
+                            <li><strong>Number of Teams:</strong> How many teams will compete</li>
+                            <li><strong>Number of Pubs:</strong> How many locations to visit</li>
+                            <li><strong>Search Radius:</strong> How far to search for pubs (in meters)</li>
+                            <li><strong>Drink Distribution:</strong> Random or ensure each selected drink appears once</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h3>Joining a Party</h3>
+                <ol>
+                    <li>Open Pub Roulette and tap <strong>"Join a Party"</strong></li>
+                    <li>Enter the party code provided by the host</li>
+                    <li>Enter your name</li>
+                    <li>Wait for the host to start the game</li>
+                </ol>
+
+                <h3>Starting the Game</h3>
+                <ol>
+                    <li>Host customizes settings (number of pubs, teams, drinks, etc.)</li>
+                    <li>Host taps <strong>"Start Game"</strong></li>
+                    <li>App searches for nearby pubs based on location permissions</li>
+                    <li>Players are assigned to teams via the spinning wheel</li>
+                    <li>Drinks are randomly assigned to each pub</li>
+                </ol>
+            </section>
+
+            <section id="common-issues">
+                <h2>⚠️ Common Issues</h2>
+
+                <div class="subsection">
+                    <h4>📍 Location Permission Denied</h4>
+                    <p><strong>Problem:</strong> "Location permission is required to find nearby pubs"</p>
+                    <p><strong>Solution:</strong></p>
+                    <ol>
+                        <li>Go to <strong>Settings</strong> → <strong>Privacy</strong> → <strong>Location Services</strong></li>
+                        <li>Find <strong>Pub Roulette</strong> and change it to <strong>"While Using the App"</strong></li>
+                        <li>Return to the app and try starting the game again</li>
+                    </ol>
+                    <p><em>Note: The host needs location permission to search for pubs. If you prefer specific pubs, manually add them before starting.</em></p>
+                </div>
+
+                <div class="subsection">
+                    <h4>🍻 Can't Find Pubs</h4>
+                    <p><strong>Problem:</strong> The app finds no pubs in your area</p>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Increase the <strong>Search Radius</strong> in settings</li>
+                        <li>Check that you're in an area with pub/bar listings</li>
+                        <li>Try enabling Location Services and allowing "Precise Location" access</li>
+                        <li>Manually add custom pubs before starting the game</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>📷 Camera Permission Denied</h4>
+                    <p><strong>Problem:</strong> Can't submit photos as proof of visiting pubs</p>
+                    <p><strong>Solution:</strong></p>
+                    <ol>
+                        <li>Go to <strong>Settings</strong> → <strong>Privacy</strong> → <strong>Camera</strong></li>
+                        <li>Find <strong>Pub Roulette</strong> and toggle it <strong>On</strong></li>
+                        <li>Return to the app and try submitting a photo</li>
+                    </ol>
+                </div>
+
+                <div class="subsection">
+                    <h4>🔄 Team Progress Not Updating</h4>
+                    <p><strong>Problem:</strong> Photos don't appear after submission, or team progress isn't updating</p>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Check your internet connection (WiFi or cellular data required)</li>
+                        <li>Make sure all team members have the app open and are on the same party</li>
+                        <li>Try closing and reopening the app</li>
+                        <li>Ensure everyone has submitted for the current pub before moving to the next</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>📸 Blurry Photos</h4>
+                    <p><strong>Problem:</strong> Submitted photos appear with reduced quality</p>
+                    <p><strong>Solution:</strong> This is normal. The app compresses photos to reduce upload time and data usage. Photos are verified by your team as proof of location only.</p>
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>🔧 Troubleshooting</h2>
+
+                <div class="subsection">
+                    <h4>💥 App Crashes When Starting Game</h4>
+                    <ol>
+                        <li>Make sure you're running the latest version of Pub Roulette</li>
+                        <li>Force close the app and reopen it</li>
+                        <li>Check that you have sufficient storage space</li>
+                        <li>If the problem persists, uninstall and reinstall the app</li>
+                    </ol>
+                </div>
+
+                <div class="subsection">
+                    <h4>🚫 Can't Connect to Party</h4>
+                    <p><strong>Problem:</strong> Getting "Party not found" error</p>
+                    <p><strong>Solution:</strong></p>
+                    <ul>
+                        <li>Double-check the party code (it's case-sensitive, 6 characters)</li>
+                        <li>Make sure the party hasn't been abandoned</li>
+                        <li>Verify you have an active internet connection</li>
+                        <li>Try waiting a few seconds and attempting again</li>
+                    </ul>
+                </div>
+
+                <div class="subsection">
+                    <h4>🎡 Wheel Spin Doesn't Work</h4>
+                    <p><strong>Problem:</strong> The team assignment wheel won't spin or freezes</p>
+                    <p><strong>Solution:</strong></p>
+                    <ol>
+                        <li>Make sure all players are in the party</li>
+                        <li>Check internet connection</li>
+                        <li>Close the app and reopen</li>
+                        <li>Try on a different WiFi network if available</li>
+                    </ol>
+                </div>
+
+                <div class="subsection">
+                    <h4>⚡ Choppy or Slow Animations</h4>
+                    <p><strong>Problem:</strong> Spinning wheel, slot machine, or other animations lag</p>
+                    <p><strong>Solutions:</strong></p>
+                    <ul>
+                        <li>Close other apps to free up device memory</li>
+                        <li>Reduce visual effects by checking device settings</li>
+                        <li>Ensure you're using a modern iPhone (iPhone 11 or later recommended)</li>
+                        <li>Check that your device has sufficient free storage space</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="tech-requirements">
+                <h2>📱 Technical Requirements</h2>
+                <ul>
+                    <li><span class="badge">iOS</span> 17.0 or later</li>
+                    <li><span class="badge">Internet</span> Required for real-time multiplayer sync</li>
+                    <li><span class="badge">Location</span> Required to search for nearby pubs (optional if manually adding pubs)</li>
+                    <li><span class="badge">Camera</span> Required to submit photo evidence</li>
+                    <li><span class="badge">Storage</span> ~50 MB available</li>
+                </ul>
+            </section>
+
+            <section id="faq">
+                <h2>❓ Frequently Asked Questions</h2>
+
+                <div class="faq-item">
+                    <strong>Q: Can I play Pub Roulette offline?</strong>
+                    <p>A: No, the game requires an active internet connection for real-time multiplayer synchronization.</p>
+                </div>
+
+                <div class="faq-item">
+                    <strong>Q: How long does a party stay active?</strong>
+                    <p>A: Parties are stored indefinitely, but players should complete their crawl within a reasonable timeframe. If you need to resume later, use the same party code.</p>
+                </div>
+
+                <div class="faq-item">
+                    <strong>Q: Can I play with more than one team?</strong>
+                    <p>A: Yes! When creating a party, specify the number of teams. Players will be assigned to teams via the spinning wheel.</p>
+                </div>
+
+                <div class="faq-item">
+                    <strong>Q: What happens if someone leaves the game?</strong>
+                    <p>A: Their team's progress is saved. Other teammates can continue. If the host leaves, another player can take over leadership.</p>
+                </div>
+
+                <div class="faq-item">
+                    <strong>Q: Can I customize which pubs appear in the game?</strong>
+                    <p>A: Yes! Before starting the game, you can manually add or remove pubs from the list.</p>
+                </div>
+
+                <div class="faq-item">
+                    <strong>Q: Is there a time limit to complete the crawl?</strong>
+                    <p>A: No official time limit, but your team's completion time is tracked on the leaderboard.</p>
+                </div>
+
+                <div class="faq-item">
+                    <strong>Q: Can I play with friends in different cities?</strong>
+                    <p>A: Yes! The search location is based on where the host is or a custom location. As long as everyone has an internet connection, you can play together.</p>
+                </div>
+            </section>
+
+            <section id="contact">
+                <h2>📧 Contact Support</h2>
+
+                <h3>Before Contacting Us</h3>
+                <ul>
+                    <li>Ensure your app is up to date (check App Store)</li>
+                    <li>Verify your internet connection is stable</li>
+                    <li>Try force-closing and reopening the app</li>
+                    <li>Restart your device</li>
+                </ul>
+
+                <div class="contact-box">
+                    <h3>Get in Touch</h3>
+                    <p>Need help? We're here to assist!</p>
+                    <a href="https://github.com/alexchopoyhlu/Pub-RouletteApp/issues">Report an Issue</a>
+                    <a href="mailto:alexalichopoyhlu@gmail.com">Email Support</a>
+                </div>
+
+                <h3>When Reporting an Issue, Please Include:</h3>
+                <ul>
+                    <li>Your iOS version</li>
+                    <li>Device model (iPhone 12, iPhone 14 Pro, etc.)</li>
+                    <li>Detailed description of the problem</li>
+                    <li>Steps to reproduce the issue</li>
+                    <li>Screenshot or video if possible</li>
+                </ul>
+
+                <h3>Feature Requests</h3>
+                <p>Have an idea for a new feature? We'd love to hear it!</p>
+                <p>Open an issue on our <a href="https://github.com/alexchopoyhlu/Pub-RouletteApp/issues">GitHub repository</a> with:</p>
+                <ul>
+                    <li>Clear description of the feature</li>
+                    <li>Why you think it would improve Pub Roulette</li>
+                    <li>Any specific use cases</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <p><strong>Pub Roulette</strong> • Version 1.0 • Last Updated June 25, 2026</p>
+            <p>Thank you for playing! 🍺</p>
+        </footer>
+    </div>
+</body>
+</html>
