@@ -11,6 +11,9 @@ final class PartyService {
     var currentParty: Party?
     var currentPlayer: Player?
     var isHost: Bool = false
+    /// True when the current party is an App Review demo (created with the demo
+    /// trigger name). Local to the host device — the only device in a demo.
+    var isDemoParty: Bool = false
     var error: Error?
     var messages: [Message] = []
     private var isMessageListenerActive = false
@@ -28,10 +31,19 @@ final class PartyService {
         let hostId = UUID().uuidString
         let host = Player(id: hostId, name: hostName)
 
+        // Detect the App Review demo trigger name.
+        let isDemo = hostName.trimmingCharacters(in: .whitespaces)
+            .caseInsensitiveCompare(Constants.demoTriggerName) == .orderedSame
+
+        var players = [host]
+        if isDemo {
+            players.append(contentsOf: Self.makeDemoBots())
+        }
+
         let party = Party(
             code: code,
             hostId: hostId,
-            players: [host]
+            players: players
         )
 
         try await firebaseService.createParty(party)
@@ -39,10 +51,21 @@ final class PartyService {
         currentParty = party
         currentPlayer = host
         isHost = true
+        isDemoParty = isDemo
 
         startListening(to: code)
 
         return party
+    }
+
+    /// Bot players that fill out a demo party so a single tester can start a game.
+    private static func makeDemoBots() -> [Player] {
+        Constants.demoBotNames.map { Player(id: "demo-bot-\(UUID().uuidString)", name: $0) }
+    }
+
+    /// Whether a player is a demo bot (auto-managed, no real device behind it).
+    private func isDemoBot(_ player: Player) -> Bool {
+        player.id.hasPrefix("demo-bot-")
     }
 
     func joinParty(code: String, playerName: String) async throws -> Party {
@@ -106,6 +129,15 @@ final class PartyService {
 
     func startGame() async throws {
         guard let party = currentParty, isHost else { return }
+
+        // Demo: skip the location search entirely and use preset pubs so the
+        // game always starts regardless of the tester's location/permissions.
+        if isDemoParty {
+            let selectedPubs = Array(Constants.demoPubs.shuffled().prefix(party.pubCount))
+            try await firebaseService.setPubs(for: party.code, pubs: selectedPubs)
+            try await firebaseService.updatePartyStatus(code: party.code, status: .pubSelection)
+            return
+        }
 
         let searchLocation: CLLocation?
         if let lat = party.searchLatitude, let lon = party.searchLongitude {
@@ -263,6 +295,17 @@ final class PartyService {
         guard !currentSubmissions.contains(player.id) else { return }
 
         currentSubmissions.append(player.id)
+
+        // Demo: auto-submit for any bot teammates so the pub completes and the
+        // crawl progresses without a second player.
+        if isDemoParty {
+            for teammate in party.players where teammate.teamId == teamId && isDemoBot(teammate) {
+                if !currentSubmissions.contains(teammate.id) {
+                    currentSubmissions.append(teammate.id)
+                }
+            }
+        }
+
         team.submissions[pubKey] = currentSubmissions
 
         let teamPlayers = party.players.filter { $0.teamId == teamId }
@@ -392,6 +435,7 @@ final class PartyService {
         currentParty = nil
         currentPlayer = nil
         isHost = false
+        isDemoParty = false
     }
 }
 

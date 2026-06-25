@@ -29,6 +29,10 @@ final class LobbyViewModel {
         partyService.isHost
     }
 
+    var isDemo: Bool {
+        partyService.isDemoParty
+    }
+
     var players: [Player] {
         party?.players ?? []
     }
@@ -127,6 +131,8 @@ final class LobbyViewModel {
     }
 
     func fetchCurrentLocationIfNeeded() async {
+        // The demo uses preset pubs, so it never needs the device location.
+        guard !isDemo else { return }
         if currentLocation == nil {
             _ = try? await locationService.getCurrentLocation()
         }
@@ -159,10 +165,13 @@ final class LobbyViewModel {
     }
 
     func startGame() async {
-        guard locationAuthorized else {
-            errorMessage = "Location permission is required to find nearby pubs. Please enable it in Settings."
-            showError = true
-            return
+        // The demo uses preset pubs, so it doesn't need location permission.
+        if !partyService.isDemoParty {
+            guard locationAuthorized else {
+                errorMessage = "Location permission is required to find nearby pubs. Please enable it in Settings."
+                showError = true
+                return
+            }
         }
 
         isLoading = true

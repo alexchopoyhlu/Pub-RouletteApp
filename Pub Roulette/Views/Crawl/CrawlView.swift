@@ -49,6 +49,7 @@ struct CrawlView: View {
             print("CrawlView: onAppear called")
             partyService.startMessageListener()
         }
+        .preferredColorScheme(.dark)
     }
 }
 

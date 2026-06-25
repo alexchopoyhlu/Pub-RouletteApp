@@ -2,8 +2,17 @@ import SwiftUI
 
 struct DrinkRevealView: View {
     @Binding var navigationPath: NavigationPath
-    @State private var viewModel = DrinkRevealViewModel()
+    @State private var viewModel: DrinkRevealViewModel
     @State private var hasStarted = false
+    private let autoStart: Bool
+
+    init(navigationPath: Binding<NavigationPath>,
+         viewModel: DrinkRevealViewModel = DrinkRevealViewModel(),
+         autoStart: Bool = true) {
+        self._navigationPath = navigationPath
+        self._viewModel = State(initialValue: viewModel)
+        self.autoStart = autoStart
+    }
 
     var body: some View {
         ZStack {
@@ -19,14 +28,10 @@ struct DrinkRevealView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         ForEach(Array(zip(viewModel.pubs, viewModel.drinks).enumerated()), id: \.offset) { index, item in
-                            let phase = viewModel.slotPhases[safe: index] ?? .idle
                             drinkPubRow(
                                 pub: item.0,
                                 drink: item.1,
-                                index: index,
-                                isRevealed: phase == .revealed,
-                                slotOffset: viewModel.slotOffsets[safe: index] ?? 0,
-                                isSpinning: phase == .spinning || phase == .stopping
+                                index: index
                             )
                         }
                     }
@@ -73,7 +78,7 @@ struct DrinkRevealView: View {
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
-            if !hasStarted {
+            if autoStart && !hasStarted {
                 hasStarted = true
                 try? await Task.sleep(for: .milliseconds(500))
                 await viewModel.startSlotAnimation()
@@ -104,8 +109,10 @@ struct DrinkRevealView: View {
             .clipShape(Capsule())
     }
 
-    private func drinkPubRow(pub: Pub, drink: String, index: Int, isRevealed: Bool, slotOffset: CGFloat, isSpinning: Bool) -> some View {
-        ZStack {
+    private func drinkPubRow(pub: Pub, drink: String, index: Int) -> some View {
+        let isRevealed = viewModel.revealedFlags[safe: index] ?? false
+
+        return ZStack {
             // MARK: - Large background number
             if isRevealed {
                 HStack {
@@ -121,18 +128,27 @@ struct DrinkRevealView: View {
             // MARK: - Row content
             HStack(spacing: 16) {
                 ZStack {
+                    // Solid backing so the reel reads clearly against the gradient.
+                    Circle()
+                        .fill(Color.black.opacity(0.35))
+                        .frame(width: 54, height: 54)
+
                     if isRevealed {
                         DrinkIconView(drinkType: drink, size: 50)
                             .transition(.scale.combined(with: .opacity))
                     } else {
-                        DrinkSlotView(
-                            drinks: Constants.drinkTypes,
-                            targetDrink: drink,
-                            offset: slotOffset,
-                            isSpinning: isSpinning
-                        )
-                        .frame(width: 50, height: 50)
-                        .clipShape(Circle())
+                        // Drive the reel per-frame so rolling + waterfall stop are smooth.
+                        TimelineView(.animation) { context in
+                            let motion = viewModel.slotMotion(index: index, at: context.date)
+                            DrinkSlotView(
+                                drinks: Constants.drinkTypes,
+                                targetDrink: drink,
+                                offset: motion.offset,
+                                isSpinning: motion.isSpinning
+                            )
+                            .frame(width: 50, height: 50)
+                            .clipShape(Circle())
+                        }
                     }
                 }
                 .frame(width: 60, height: 60)
@@ -151,7 +167,6 @@ struct DrinkRevealView: View {
                     if isRevealed {
                         Text(drink)
                             .font(.bricolage(.subheadline))
-                            .foregroundStyle(.orange)
                     }
                 }
 
@@ -168,7 +183,33 @@ struct DrinkRevealView: View {
 
 #Preview {
     @Previewable @State var path = NavigationPath()
+    @Previewable @State var viewModel: DrinkRevealViewModel = {
+        let vm = DrinkRevealViewModel()
+        vm.configureForPreview(
+            pubs: [
+                Pub(name: "The Red Lion", address: "1 High St", latitude: 0, longitude: 0),
+                Pub(name: "The Crown", address: "2 High St", latitude: 0, longitude: 0),
+                Pub(name: "The Kings Arms", address: "3 High St", latitude: 0, longitude: 0),
+                Pub(name: "The Black Horse", address: "4 High St", latitude: 0, longitude: 0),
+                Pub(name: "The White Hart", address: "5 High St", latitude: 0, longitude: 0)
+            ],
+            drinks: ["Beer", "Wine", "Shot", "Cocktail", "Cider"]
+        )
+        return vm
+    }()
+
     NavigationStack {
-        DrinkRevealView(navigationPath: $path)
+        DrinkRevealView(navigationPath: $path, viewModel: viewModel, autoStart: false)
+            .safeAreaInset(edge: .bottom) {
+                Button("Start Animation") {
+                    Task { await viewModel.startSlotAnimation() }
+                }
+                .font(.bricolage(.headline))
+                .foregroundStyle(.black)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 14)
+                .background(.white, in: Capsule())
+                .padding(.bottom, 8)
+            }
     }
 }

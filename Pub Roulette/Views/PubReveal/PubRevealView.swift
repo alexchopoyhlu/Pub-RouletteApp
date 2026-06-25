@@ -108,7 +108,46 @@ struct PubRevealView: View {
 
 #Preview {
     @Previewable @State var path = NavigationPath()
-    NavigationStack {
+
+    let mockPubs: [Pub] = [
+        Pub(name: "The Crown & Anchor", address: "12 King St, London", latitude: 51.5074, longitude: -0.1278),
+        Pub(name: "The Red Lion", address: "48 Parliament St, London", latitude: 51.5014, longitude: -0.1246),
+        Pub(name: "The Rose & Thistle", address: "7 Charlotte Pl, London", latitude: 51.5191, longitude: -0.1357),
+        Pub(name: "The Black Swan", address: "21 Camden High St, London", latitude: 51.5390, longitude: -0.1426),
+        Pub(name: "The Old Bell Tavern", address: "95 Fleet St, London", latitude: 51.5141, longitude: -0.1075)
+    ]
+
+    let hostId = UUID().uuidString
+    let teammateId = UUID().uuidString
+    let teamId = UUID().uuidString
+
+    let mockTeam = Team(
+        id: teamId,
+        name: "Red Roosters",
+        colorHex: "#E53935",
+        pubOrder: [2, 0, 4, 1, 3],
+        drinkOrder: ["Beer", "Cocktail", "Wine", "Shot", "Beer"]
+    )
+
+    let mockHost = Player(id: hostId, name: "Alex", teamId: teamId)
+    let mockTeammate = Player(id: teammateId, name: "Sam", teamId: teamId)
+
+    let mockParty = Party(
+        code: "ABC123",
+        hostId: hostId,
+        status: .pubReveal,
+        teamCount: 1,
+        pubCount: mockPubs.count,
+        players: [mockHost, mockTeammate],
+        teams: [mockTeam],
+        pubs: mockPubs
+    )
+
+    PartyService.shared.currentParty = mockParty
+    PartyService.shared.currentPlayer = mockHost
+    PartyService.shared.isHost = true
+
+    return NavigationStack {
         PubRevealView(navigationPath: $path)
     }
 }

@@ -87,7 +87,7 @@ struct LobbyView: View {
                 handleStatusChange(oldStatus: oldStatus, newStatus: newStatus)
             }
             .onAppear {
-                if viewModel.isHost {
+                if viewModel.isHost && !viewModel.isDemo {
                     viewModel.requestLocationPermission()
                 }
             }
@@ -330,6 +330,9 @@ struct HostControlsSheet: View {
                         
 
                         // Location and Custom Pubs buttons
+                        // Hidden in the demo, which uses preset pubs and needs no
+                        // location (and avoids the map-based pickers entirely).
+                        if !viewModel.isDemo {
                         HStack(spacing: 12) {
                             Button {
                                 viewModel.showLocationPicker = true
@@ -389,6 +392,7 @@ struct HostControlsSheet: View {
                                 )
                             }
                             .buttonStyle(.plain)
+                        }
                         }
 
                         // Drink Types selector
@@ -519,7 +523,42 @@ struct HostControlsSheet: View {
 }
 
 #Preview {
-    NavigationStack {
+    let hostId = UUID().uuidString
+    let mockHost = Player(id: hostId, name: "Alex")
+    let mockPlayers: [Player] = [
+        mockHost,
+        Player(name: "Sam"),
+        Player(name: "Jordan"),
+        Player(name: "Priya"),
+        Player(name: "Marco")
+    ]
+
+    let mockCustomPubs: [Pub] = [
+        Pub(name: "The Crown & Anchor", address: "12 King St, London", latitude: 51.5074, longitude: -0.1278),
+        Pub(name: "The Red Lion", address: "48 Parliament St, London", latitude: 51.5014, longitude: -0.1246)
+    ]
+
+    let mockParty = Party(
+        code: "ABC123",
+        hostId: hostId,
+        status: .lobby,
+        teamCount: 3,
+        pubCount: 5,
+        searchRadius: 1500,
+        searchLatitude: 51.5074,
+        searchLongitude: -0.1278,
+        customPubs: mockCustomPubs,
+        teamAssignmentMode: .mixed,
+        drinkDistributionMode: .oneOfEach,
+        selectedDrinkTypes: ["Beer", "Wine", "Cocktail", "Shot"],
+        players: mockPlayers
+    )
+
+    PartyService.shared.currentParty = mockParty
+    PartyService.shared.currentPlayer = mockHost
+    PartyService.shared.isHost = true
+
+    return NavigationStack {
         LobbyView(previewShowHostControls: true)
     }
 }

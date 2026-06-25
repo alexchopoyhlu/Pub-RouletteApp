@@ -17,6 +17,16 @@ struct PubSubmissionSheet: View {
         capturedImage != nil
     }
 
+    // In the App Review demo there's no camera (e.g. Simulator), so allow
+    // submitting without a photo.
+    private var isDemo: Bool {
+        PartyService.shared.isDemoParty
+    }
+
+    private var canSubmit: Bool {
+        hasImage || isDemo
+    }
+
     var body: some View {
         VStack(spacing: 16) {
 
@@ -130,11 +140,11 @@ extension PubSubmissionSheet {
                 .font(.bricolage(.headline))
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(hasImage ? Color.green : Color.gray.opacity(0.4))
+                .background(canSubmit ? Color.green : Color.gray.opacity(0.4))
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
         }
-        .disabled(!hasImage)
+        .disabled(!canSubmit)
     }
 
     private func openInMaps() {

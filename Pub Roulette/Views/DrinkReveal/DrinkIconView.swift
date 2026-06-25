@@ -71,7 +71,7 @@ struct DrinkSlotView: View {
             DrinkIconView(drinkType: "Spirits", size: 60)
             DrinkIconView(drinkType: "Cider", size: 60)
             DrinkIconView(drinkType: "Sparkling", size: 60)
-            DrinkIconView(drinkType: "No-Alcohol", size: 60)
+            DrinkIconView(drinkType: "Non-Alcoholic", size: 60)
         }
 
         DrinkSlotView(

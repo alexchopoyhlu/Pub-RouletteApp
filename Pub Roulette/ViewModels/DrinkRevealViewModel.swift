@@ -5,47 +5,49 @@ import SwiftUI
 final class DrinkRevealViewModel {
     private let partyService = PartyService.shared
 
-    var slotOffsets: [CGFloat] = []
-    var slotPhases: [SlotPhase] = []  // Track phase of each slot
-    var isSpinning: Bool = false
-    var revealedCount: Int = 0
+    /// Per-slot timing & landing plan, computed once when the animation starts.
+    struct SlotPlan {
+        let spinSpeed: CGFloat     // points per second while rolling
+        let stopStart: Double      // seconds after animationStart when easing begins
+        let stopDuration: Double   // seconds to ease from rolling speed onto the target
+        let offsetAtStop: CGFloat  // continuous offset at the moment easing begins
+        let finalOffset: CGFloat   // resting offset (lands the target drink centered)
+    }
+
+    let itemHeight: CGFloat = 60
+
+    private(set) var slotPlans: [SlotPlan] = []
+    private(set) var animationStart: Date?
+    /// Discrete reveal flags, flipped with animation so the icon pop transitions.
+    var revealedFlags: [Bool] = []
     var allRevealed: Bool = false
 
-    private let itemHeight: CGFloat = 60
+    // MARK: - Waterfall timing config
+    private let baseSpin: Double = 1.6        // everyone rolls together for this long
+    private let waterfallGap: Double = 0.9    // delay between each slot starting to stop
+    private let stopDuration: Double = 1.0    // ease-onto-target duration
+    private let loopsPerSecond: CGFloat = 0.8 // rolling speed in full reel loops
 
-    enum SlotPhase {
-        case idle
-        case spinning
-        case stopping
-        case revealed
-    }
+    // Preview/testing overrides — when set, used instead of the live party data.
+    private var previewDrinks: [String]?
+    private var previewPubs: [Pub]?
 
-    var party: Party? {
-        partyService.currentParty
-    }
+    var party: Party? { partyService.currentParty }
+    var isHost: Bool { partyService.isHost }
+    var myTeam: Team? { partyService.myTeam }
 
-    var isHost: Bool {
-        partyService.isHost
-    }
-
-    var myTeam: Team? {
-        partyService.myTeam
-    }
-
-    var drinks: [String] {
-        myTeam?.drinkOrder ?? []
-    }
+    var drinks: [String] { previewDrinks ?? myTeam?.drinkOrder ?? [] }
 
     var pubs: [Pub] {
+        if let previewPubs { return previewPubs }
         guard let team = myTeam, let party = party else { return [] }
-        return team.pubOrder.compactMap { index in
-            party.pubs[safe: index]
-        }
+        return team.pubOrder.compactMap { party.pubs[safe: $0] }
     }
 
-    init() {
-        slotOffsets = Array(repeating: 0, count: 10)
-        slotPhases = Array(repeating: .idle, count: 10)
+    /// Injects fixed pubs/drinks so the reveal can be exercised in SwiftUI previews.
+    func configureForPreview(pubs: [Pub], drinks: [String]) {
+        previewPubs = pubs
+        previewDrinks = drinks
     }
 
     func startSlotAnimation() async {
@@ -56,87 +58,80 @@ final class DrinkRevealViewModel {
             attempts += 1
         }
 
-        guard drinks.count > 0 else { return }
+        guard !drinks.isEmpty else { return }
 
-        isSpinning = true
+        // Reset so the animation can be re-run (e.g. from the preview button).
+        allRevealed = false
+
         let drinkCount = drinks.count
-        let totalHeight = itemHeight * CGFloat(Constants.drinkTypes.count)
+        let reelCount = Constants.drinkTypes.count
+        let totalHeight = itemHeight * CGFloat(reelCount)
+        let spinSpeed = totalHeight * loopsPerSecond
 
-        // Phase 1: Start all slots spinning simultaneously
+        var plans: [SlotPlan] = []
         for i in 0..<drinkCount {
-            slotPhases[i] = .spinning
-            // Each slot spins a different amount (more for later slots)
-            let spinDistance = totalHeight * CGFloat(4 + i)
+            let targetIndex = Constants.drinkTypes.firstIndex(of: drinks[i]) ?? 0
+            let targetOffset = CGFloat(targetIndex) * itemHeight
 
-            withAnimation(.linear(duration: 0.5)) {
-                slotOffsets[i] = spinDistance * 0.3
+            let stopStart = baseSpin + Double(i) * waterfallGap
+            let offsetAtStop = spinSpeed * CGFloat(stopStart)
+
+            // Land on the target a couple of full loops past where rolling left off,
+            // so the slowdown always travels forward by a natural distance.
+            let cyclesAtStop = (offsetAtStop / totalHeight).rounded(.up)
+            let finalOffset = (cyclesAtStop + 2) * totalHeight + targetOffset
+
+            plans.append(SlotPlan(
+                spinSpeed: spinSpeed,
+                stopStart: stopStart,
+                stopDuration: stopDuration,
+                offsetAtStop: offsetAtStop,
+                finalOffset: finalOffset
+            ))
+        }
+
+        revealedFlags = Array(repeating: false, count: drinkCount)
+        slotPlans = plans
+        animationStart = Date()
+
+        // Fire haptics and flip reveal flags at each slot's landing time.
+        let start = Date()
+        for i in 0..<plans.count {
+            let revealAt = plans[i].stopStart + plans[i].stopDuration
+            let wait = revealAt - Date().timeIntervalSince(start)
+            if wait > 0 {
+                try? await Task.sleep(for: .seconds(wait))
+            }
+            Haptics.medium()
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                if i < revealedFlags.count { revealedFlags[i] = true }
             }
         }
 
-        // Continue spinning while we wait
-        try? await Task.sleep(for: .milliseconds(400))
-
-        // Extend the spin for all slots
-        for i in 0..<drinkCount {
-            let spinDistance = totalHeight * CGFloat(4 + i)
-            withAnimation(.linear(duration: 0.8)) {
-                slotOffsets[i] = spinDistance * 0.7
-            }
-        }
-
-        try? await Task.sleep(for: .milliseconds(600))
-
-        // Phase 2: Cascade the stopping - one slot at a time
-        for i in 0..<drinkCount {
-            await stopSlot(at: i)
-            // Small delay before next slot starts stopping
-            try? await Task.sleep(for: .milliseconds(150))
-        }
+        Haptics.success()
+        allRevealed = true
     }
 
-    private func stopSlot(at index: Int) async {
-        guard index < drinks.count else { return }
-
-        slotPhases[index] = .stopping
-
-        let targetDrink = drinks[index]
-        let targetDrinkIndex = Constants.drinkTypes.firstIndex(of: targetDrink) ?? 0
-        let totalHeight = itemHeight * CGFloat(Constants.drinkTypes.count)
-
-        // Calculate final position that lands on target drink
-        // Add extra rotations for visual effect, then land on target
-        let extraRotations = totalHeight * CGFloat(2 + index)
-        let targetOffset = CGFloat(targetDrinkIndex) * itemHeight
-        let finalOffset = extraRotations + targetOffset
-
-        // Slow down and stop with easing
-        withAnimation(.easeOut(duration: 0.8 + Double(index) * 0.1)) {
-            slotOffsets[index] = finalOffset
+    /// Continuous reel motion for a slot at a given frame time.
+    func slotMotion(index: Int, at date: Date) -> (offset: CGFloat, isSpinning: Bool) {
+        guard let start = animationStart, index < slotPlans.count else {
+            return (0, false)
         }
 
-        // Wait for animation to mostly complete
-        try? await Task.sleep(for: .milliseconds(700 + index * 80))
+        let plan = slotPlans[index]
+        let elapsed = date.timeIntervalSince(start)
 
-        // Snap with spring for satisfying stop
-        withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
-            // Normalize to exact position
-            slotOffsets[index] = targetOffset
-        }
-
-        Haptics.medium()
-
-        try? await Task.sleep(for: .milliseconds(200))
-
-        // Reveal
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            slotPhases[index] = .revealed
-            revealedCount = max(revealedCount, index + 1)
-        }
-
-        if revealedCount >= drinks.count {
-            Haptics.success()
-            allRevealed = true
-            isSpinning = false
+        if elapsed < plan.stopStart {
+            // Rolling at constant speed — modulo wrapping happens in the view.
+            return (plan.spinSpeed * CGFloat(elapsed), true)
+        } else if elapsed < plan.stopStart + plan.stopDuration {
+            // Ease out from rolling speed onto the exact target offset.
+            let t = (elapsed - plan.stopStart) / plan.stopDuration
+            let eased = 1 - pow(1 - t, 3) // easeOutCubic
+            let offset = plan.offsetAtStop + (plan.finalOffset - plan.offsetAtStop) * CGFloat(eased)
+            return (offset, true)
+        } else {
+            return (plan.finalOffset, false)
         }
     }
 

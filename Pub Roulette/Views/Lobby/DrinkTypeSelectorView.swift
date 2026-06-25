@@ -7,7 +7,7 @@ struct DrinkTypeSelectorView: View {
     // Arrange drinks in stretcher bond pattern (offset rows)
     private let row1 = ["Shot", "Wine", "Beer"]
     private let row2 = ["Cocktail", "Spirits"]
-    private let row3 = ["Cider", "Sparkling", "No-Alcohol"]
+    private let row3 = ["Cider", "Sparkling", "Non-Alcoholic"]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

@@ -164,7 +164,7 @@ struct ResultsView: View {
         case "Spirits": return .teal
         case "Cider": return .green
         case "Sparkling": return Color(red: 1.0, green: 0.7, blue: 0.0)
-        case "No-Alcohol": return .blue
+        case "Non-Alcoholic": return .blue
         default: return Color(red: 0.77, green: 0.6, blue: 0.13) // Beer gold
         }
     }

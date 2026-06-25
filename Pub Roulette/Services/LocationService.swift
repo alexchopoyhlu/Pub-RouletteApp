@@ -30,6 +30,12 @@ final class LocationService: NSObject {
         }
 
         return try await withCheckedThrowingContinuation { continuation in
+            // If a request is already in flight, fail this caller rather than
+            // overwriting (and leaking) the previous continuation.
+            guard locationContinuation == nil else {
+                continuation.resume(throwing: LocationError.requestInProgress)
+                return
+            }
             locationContinuation = continuation
             locationManager.requestLocation()
         }
@@ -111,6 +117,10 @@ final class LocationService: NSObject {
             MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking
         ])
     }
+}
+
+enum LocationError: Error {
+    case requestInProgress
 }
 
 extension LocationService: CLLocationManagerDelegate {

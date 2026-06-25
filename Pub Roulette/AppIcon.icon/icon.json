@@ -1,13 +1,26 @@
 {
   "fill" : {
-    "solid" : "display-p3:0.04564,0.10380,0.19232,1.00000"
+    "solid" : "display-p3:0.00881,0.04653,0.21225,1.00000"
   },
   "groups" : [
     {
       "layers" : [
         {
-          "image-name" : "Group 1 4.svg",
-          "name" : "Group 1 4"
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:1.00000,0.08373,0.00000,1.00000",
+              "display-p3:1.00000,0.93408,0.06445,1.00000"
+            ]
+          },
+          "image-name" : "IMG_2705-2.png",
+          "name" : "IMG_2705-2",
+          "position" : {
+            "scale" : 0.45,
+            "translation-in-points" : [
+              -3.9335238627445737,
+              26.73843470021355
+            ]
+          }
         }
       ],
       "shadow" : {

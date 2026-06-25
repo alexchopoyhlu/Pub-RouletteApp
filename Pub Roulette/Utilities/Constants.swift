@@ -32,7 +32,7 @@ enum Constants {
         "Spirits",
         "Cider",
         "Sparkling",
-        "No-Alcohol"
+        "Non-Alcoholic"
     ]
 
     static let drinkEmojis: [String: String] = [
@@ -43,7 +43,7 @@ enum Constants {
         "Spirits": "🍸",
         "Cider": "🍏",
         "Sparkling": "🥂",
-        "No-Alcohol": "🧃"
+        "Non-Alcoholic": "🧃"
     ]
 
     static let drinkIcons: [String: String] = [
@@ -54,7 +54,7 @@ enum Constants {
         "Spirits": "wineglass.fill",
         "Cider": "leaf.fill",
         "Sparkling": "sparkles",
-        "No-Alcohol": "drop.fill"
+        "Non-Alcoholic": "drop.fill"
     ]
 
     static let drinkColors: [String: String] = [
@@ -65,7 +65,7 @@ enum Constants {
         "Spirits": "#00897B",   // Teal
         "Cider": "#7CB342",     // Apple green
         "Sparkling": "#FFB300", // Gold/Champagne
-        "No-Alcohol": "#FF7043" // Coral orange
+        "Non-Alcoholic": "#FF7043" // Coral orange
     ]
 
     static let minSearchRadius: Int = 100
@@ -84,4 +84,29 @@ enum Constants {
     static let wheelSpinDuration: Double = 3.0
     static let cardFlipDuration: Double = 0.6
     static let slotSpinDuration: Double = 2.0
+
+    // MARK: - App Review Demo
+
+    /// Entering this as the player name when creating a party spins up a fully
+    /// self-contained demo (bot players + preset pubs) so a single App Review
+    /// tester can play through the whole game without a second device.
+    static let demoTriggerName: String = "AppleDemo"
+
+    /// Names used for the demo bot players that fill out the party.
+    static let demoBotNames: [String] = ["Sam", "Mia", "Jack"]
+
+    /// Preset pubs used in the demo so the game never depends on a real
+    /// location search succeeding. Coordinates are real central-London pubs.
+    static let demoPubs: [Pub] = [
+        Pub(name: "The Churchill Arms", address: "119 Kensington Church St, London", latitude: 51.5074, longitude: -0.1949),
+        Pub(name: "Ye Olde Cheshire Cheese", address: "145 Fleet St, London", latitude: 51.5141, longitude: -0.1075),
+        Pub(name: "The Mayflower", address: "117 Rotherhithe St, London", latitude: 51.5012, longitude: -0.0531),
+        Pub(name: "The Lamb & Flag", address: "33 Rose St, London", latitude: 51.5118, longitude: -0.1257),
+        Pub(name: "The Spaniards Inn", address: "Spaniards Rd, London", latitude: 51.5707, longitude: -0.1779),
+        Pub(name: "The Prospect of Whitby", address: "57 Wapping Wall, London", latitude: 51.5089, longitude: -0.0498),
+        Pub(name: "The Dove", address: "19 Upper Mall, London", latitude: 51.4905, longitude: -0.2356),
+        Pub(name: "The George Inn", address: "75-77 Borough High St, London", latitude: 51.5042, longitude: -0.0903),
+        Pub(name: "The Blackfriar", address: "174 Queen Victoria St, London", latitude: 51.5121, longitude: -0.1036),
+        Pub(name: "The Harp", address: "47 Chandos Pl, London", latitude: 51.5093, longitude: -0.1247)
+    ]
 }
